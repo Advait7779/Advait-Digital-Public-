@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-brand-cream: #f2f1e5;
+  --color-brand-cream-light: #fbfbf7;
+  --color-brand-charcoal: #2c2927;
+  --color-brand-charcoal-light: #3d3936;
+  --color-brand-orange: #f36308;
+  --color-brand-yellow: #ffe070;
+  --color-brand-yellow-light: #fbe8a6;
+  
+  --font-sans: 'Inter', sans-serif;
+  --font-serif: 'Inter', sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-brand-cream-light text-brand-charcoal font-sans antialiased selection:bg-brand-orange selection:text-white overflow-x-hidden;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans font-bold tracking-tight;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #fbfbf7;
+}
+::-webkit-scrollbar-thumb {
+  background: #2c2927;
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f36308;
+}
+
+/* Smooth page transitions and utilities */
+.glass-nav {
+  background: rgba(251, 251, 247, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(44, 41, 39, 0.08);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(44, 41, 39, 0.05);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #2c2927 0%, #f36308 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

@@ -1,0 +1,21 @@
+import os
+import time
+
+workspace_dir = "c:/Users/advai/OneDrive/Desktop/Advait Digital"
+current_time = time.time()
+
+print("Files modified/added in the last 20 minutes:")
+for root, dirs, files in os.walk(workspace_dir):
+    # Skip node_modules and dist
+    if "node_modules" in root or "dist" in root or ".git" in root:
+        continue
+    for file in files:
+        path = os.path.join(root, file)
+        try:
+            mtime = os.path.getmtime(path)
+            # Check if modified in last 20 minutes (1200 seconds)
+            if current_time - mtime < 1200:
+                size = os.path.getsize(path)
+                print(f"{path} (size={size} bytes, age={int(current_time - mtime)}s)")
+        except Exception as e:
+            pass

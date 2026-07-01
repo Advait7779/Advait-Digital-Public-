@@ -1,0 +1,72 @@
++91 82829-82829
+### WhatsApp Business API & Conversations
+Conversations are deducted from a separate WhatsApp Credit Recharge paid to Meta
+### User Initiated Conversation (UIC)
+A conversation that initiates in response to a user message. Whenever a business replies to a user within the 24 hour services that message will be associated with a user initiated conversation.
+### Business Initiated Conversation (BIC)
+A Conversation that initiates from a business sending a user a message outside the 24 hour customer service window.
+### Create Marketing Campaigns that Convert
+Send promotions, offers, and back-in-stock alerts while respecting customer permissions
+Set up campaigns, send abandonment notifications, appointment alerts and re-buy reminders
+Trigger order and booking confirmations, subscription reminders, delivery updates and more
+### Sell More with your WhatsApp Store
+Showcase relevant products from your catalog with WhatsApp product messages through commerce API
+Send interactive multi and single-product messages to present products from your inventory
+Allow adding products to the shopping cart without risking obsolete information such as price and availability
+### Deliver on moments of truth with 1:1 Customer Support
+Complement customer care with smart Whatsapp chatbots that can handle bulk of the routine queries
+Reduce response time and operational costs with canned responses and self-serve flows
+Gracefully handover to live agents for complex queries or irate customers
+### Programmable 2-way conversations with unmatchable scale and speed
+### Break the language barrier
+Deliver multi-lingual support and auto template translation to converse in user’s preferred language
+### Security and quality standards
+Earn trust with clear opt-in requirements, security built in at every layer and end to end encryption
+### Rapid onboarding
+Fast-track the tedious groundwork, verification hassles and security approvals with 50% faster onboarding
+### Custom, pre-approved templates
+Simplify launches with our template library for all your needs - appointment reminders, shipping updates, OTPs, alerts and more
+### Rich communication formats
+Elevate campaign performance with engaging images, videos, PDFs, CTAs & quick-reply buttons enabling rich 2-way chats
+### Advanced analytics
+Deliver multi-lingual support and auto template translation to converse in user’s preferred language
+Feature
+WhatsApp
+WhatsApp Business App
+WhatsApp API
+Designed For
+Personal
+Single Business User
+SME/Enterprise
+No of Device
+Single
+2 Device
+Multiple Devices
+End to End Encryption
+Website to WhatsApp Chat
+GDPR Compliant
+Business Account
+Bots & Automation
+Shared Team Inbox
+Scalable
+Integration to 3rd party Software
+Enterprise Level Software
+Subscription Enrolment
+Details Analytics & Reporting
+3rd Party Lead Engagement
+### Contact Us
+082829 82829
+sales@advaitteleservices.com
+### Follow Us
+### Useful Links
+Home
+About Us
+Services
+Solutions
+Survelliance Product
+Product
+Contact
+Privacy Policy
+Careers
+### Location
+Office No.522, 5th Floor, Amanora Chambers,Amanora Town Centre East Block, Pune 411028.
