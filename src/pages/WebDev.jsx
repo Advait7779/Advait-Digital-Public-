@@ -11,6 +11,7 @@ import imgBetter from '../assets/web_better.png';
 import imgDesign from '../assets/web_design.png';
 import imgFrontend from '../assets/web_frontend.png';
 import imgCms from '../assets/web_cms.png';
+import TechVideoPlayer from '../components/TechVideoPlayer';
 
 // CSS Multi-Device Mockup representing responsive site structure
 const MultiDeviceMockup = () => {
@@ -282,6 +283,28 @@ export default function WebDev() {
             <div className="lg:col-span-5 flex justify-center">
               <MultiDeviceMockup />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Live Development Video Showcase Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="lg:col-span-6">
+            <TechVideoPlayer 
+              src="/Website developement.mp4" 
+              title="Custom Web Development & Portal Showcase" 
+            />
+          </div>
+          <div className="lg:col-span-6 space-y-6">
+            <span className="text-xs font-bold text-brand-orange uppercase tracking-wider">Live Development Demo</span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-brand-charcoal font-serif">
+              Modern Web Platforms in Action
+            </h2>
+            <div className="w-20 h-1 bg-brand-orange rounded"></div>
+            <p className="text-brand-charcoal-light text-sm sm:text-base leading-relaxed font-medium">
+              Explore our custom website building and portal engineering in real-time. We craft responsive corporate websites, web applications, and interactive portals engineered for high speed, sleek user experience, and conversion optimization.
+            </p>
           </div>
         </div>
       </section>

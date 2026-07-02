@@ -6,6 +6,7 @@ import {
 } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 import PhoneVideoPlayer from '../components/PhoneVideoPlayer';
+import TechVideoPlayer from '../components/TechVideoPlayer';
 
 // Import graphics copied from uploaded assets
 import imgHeads from '../assets/dm_heads.png';
@@ -158,13 +159,13 @@ export default function DigitalMarketing() {
       {/* Brand Building Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          {/* Video Mockup Column (Left on Desktop) */}
-          <div className="lg:col-span-5 flex justify-center">
-            <PhoneVideoPlayer src="/ADVAIT vid 3 green screen.mp4" />
+          {/* Tech Video Mockup Column (Left on Desktop) */}
+          <div className="lg:col-span-6">
+            <TechVideoPlayer src="/Website developement.mp4" title="Digital Brand & Web Development Platform" />
           </div>
 
           {/* Text Column (Right on Desktop) */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-6 space-y-6">
             <div className="space-y-2">
               <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">Brand Building</span>
               <h2 className="text-2xl sm:text-3xl font-serif font-bold text-brand-charcoal">

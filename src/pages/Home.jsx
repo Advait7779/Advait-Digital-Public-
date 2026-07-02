@@ -7,6 +7,7 @@ import {
 } from '@phosphor-icons/react';
 import ServiceCard from '../components/ServiceCard';
 import PhoneVideoPlayer from '../components/PhoneVideoPlayer';
+import TechVideoPlayer from '../components/TechVideoPlayer';
 
 // Import services illustrations
 import rcsMultiplatform from '../assets/rcs_multiplatform.png';
@@ -560,7 +561,38 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Services Slider Carousel ──────────────────────────────── */}
+      {/* ── Bulk SMS & Campaign Video Section ──────────────────────── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="lg:col-span-6">
+            <TechVideoPlayer 
+              src="/bulk election.mp4" 
+              title="Bulk SMS & Campaign Messaging Platform" 
+            />
+          </div>
+          <div className="lg:col-span-6 space-y-6">
+            <span className="text-xs font-bold text-brand-orange uppercase tracking-wider">Live Platform Demo & Bulk SMS</span>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-brand-charcoal font-serif">
+              Engage Audiences & Voters Instantly with Bulk SMS
+            </h2>
+            <div className="w-20 h-1 bg-brand-orange rounded"></div>
+            <p className="text-brand-charcoal-light text-sm sm:text-base leading-relaxed font-medium">
+              See our high-performance bulk messaging portal in action. With automated template triggers, customizable user variables, direct carrier routing, and election campaign support, dispatch messages that reach thousands of recipients in seconds.
+            </p>
+            <div className="pt-2">
+              <Link
+                to="/services/sms-marketing"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-charcoal hover:text-brand-orange transition-colors duration-150"
+              >
+                Explore Bulk SMS Services
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Services Slider Carousel (Our Digital Solutions) ────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center space-y-4 mb-16">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-brand-charcoal font-serif">
@@ -605,58 +637,33 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Outreach Video Section ────────────────────────────────── */}
+      {/* ── Website Development Showcase Section ──────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-5 flex justify-center">
-            <PhoneVideoPlayer src="/ADVAIT Mobile Sc.mp4" />
-          </div>
-          <div className="lg:col-span-7 space-y-6">
-            <span className="text-xs font-bold text-brand-orange uppercase tracking-wider">Live Platform Demo</span>
+          <div className="lg:col-span-6 space-y-6 order-2 lg:order-1">
+            <span className="text-xs font-bold text-brand-orange uppercase tracking-wider">Website Development & Digital Platforms</span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-brand-charcoal font-serif">
-              Engage Audiences Instantly with SMS Outreach
+              Transform Your Business with Custom Website Development
             </h2>
             <div className="w-20 h-1 bg-brand-orange rounded"></div>
             <p className="text-brand-charcoal-light text-sm sm:text-base leading-relaxed font-medium">
-              See our high-performance bulk messaging portal in action. With automated template triggers, customizable user variables, and direct carrier routing, you can dispatch campaigns that reach thousands of recipients in seconds.
-            </p>
-            <div className="pt-2">
-              <Link
-                to="/services/sms-marketing"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-charcoal hover:text-brand-orange transition-colors duration-150"
-              >
-                Explore SMS Marketing Services
-                <ArrowRight size={14} />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Interactive Catalog Showcase ──────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-7 space-y-6">
-            <span className="text-xs font-bold text-brand-orange uppercase tracking-wider">E-Commerce & Retail</span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-brand-charcoal font-serif">
-              Drive Direct Sales with Interactive Catalog Marketing
-            </h2>
-            <div className="w-20 h-1 bg-brand-orange rounded"></div>
-            <p className="text-brand-charcoal-light text-sm sm:text-base leading-relaxed font-medium">
-              Advait Digital showcases your inventory through interactive video experiences and WhatsApp Store integrations. We build seamless chatbot workflows that allow your customers to browse, add items to a cart, and complete checkouts in real-time, right inside the conversation thread.
+              Elevate your digital presence with custom web applications, responsive corporate portals, and high-converting e-commerce sites. We design ultra-fast, sleek, and mobile-optimized web solutions designed to turn visitors into loyal customers.
             </p>
             <div className="pt-2">
               <Link
                 to="/services/web-dev"
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-charcoal hover:text-brand-orange transition-colors duration-150"
               >
-                Explore Web Design & Stores
+                Explore Website Development
                 <ArrowRight size={14} />
               </Link>
             </div>
           </div>
-          <div className="lg:col-span-5 flex justify-center">
-            <PhoneVideoPlayer src="/ADVAIT video 2 Clothing.mp4" />
+          <div className="lg:col-span-6 order-1 lg:order-2">
+            <TechVideoPlayer 
+              src="/Website developement.mp4" 
+              title="Custom Web & Portal Development Showcase" 
+            />
           </div>
         </div>
       </section>
@@ -705,34 +712,6 @@ export default function Home() {
               })}
             </div>
 
-          </div>
-        </div>
-      </section>
-
-      {/* ── Next-Gen Strategy Video ───────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-5 flex justify-center">
-            <PhoneVideoPlayer src="/ADVAIT vid 3 green screen.mp4" />
-          </div>
-          <div className="lg:col-span-7 space-y-6">
-            <span className="text-xs font-bold text-brand-orange uppercase tracking-wider">Strategy & Brand Impact</span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-brand-charcoal font-serif">
-              Deliver High-Impact Campaign Strategies
-            </h2>
-            <div className="w-20 h-1 bg-brand-orange rounded"></div>
-            <p className="text-brand-charcoal-light text-sm sm:text-base leading-relaxed font-medium">
-              Advait Digital designs and manages high-impact multimedia campaigns from production to distribution at scale. Using high-definition videos, green screen setups, and custom graphics, we capture instant audience attention for political elections, product launches, and brand campaigns.
-            </p>
-            <div className="pt-2">
-              <Link
-                to="/services/digital-marketing"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-charcoal hover:text-brand-orange transition-colors duration-150"
-              >
-                Explore Digital Campaigns
-                <ArrowRight size={14} />
-              </Link>
-            </div>
           </div>
         </div>
       </section>

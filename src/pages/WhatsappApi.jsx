@@ -12,6 +12,7 @@ import imgShirt from '../assets/wa_store_shirt.png';
 import imgHoney from '../assets/wa_store_honey.png';
 import imgShoes from '../assets/wa_store_shoes.png';
 import PhoneVideoPlayer from '../components/PhoneVideoPlayer';
+import TechVideoPlayer from '../components/TechVideoPlayer';
 
 export default function WhatsappApi() {
   const comparisonData = [
@@ -159,12 +160,12 @@ export default function WhatsappApi() {
           {/* Section 2: WhatsApp Store (With Interactive Catalog Video) */}
           <div className="space-y-12">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-              {/* Phone video player showing clothing e-commerce catalog checkout */}
-              <div className="lg:col-span-5 flex justify-center">
-                <PhoneVideoPlayer src="/ADVAIT video 2 Clothing.mp4" />
+              {/* Horizontal tech video player showing messaging demo */}
+              <div className="lg:col-span-6">
+                <TechVideoPlayer src="/bulk election.mp4" title="WhatsApp Campaign Platform" />
               </div>
 
-              <div className="lg:col-span-7 space-y-6">
+              <div className="lg:col-span-6 space-y-6">
                 <span className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
                   <ChatCircleDots size={24} />
                 </span>

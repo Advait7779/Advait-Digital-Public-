@@ -58,3 +58,12 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* Custom Global Card Border Enhancements */
+.border-brand-charcoal\/5,
+.border-brand-charcoal\/10,
+.border-slate-200,
+.border-slate-200\/60,
+.glass-card {
+  border-color: rgba(44, 41, 39, 0.22) !important;
+}

@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 
 // Import election campaign graphic
 import imgElectionHero from '../assets/election_hero.png';
+import TechVideoPlayer from '../components/TechVideoPlayer';
 
 const ElectionChatStream = () => {
   const [messages, setMessages] = useState([]);
@@ -155,6 +156,28 @@ export default function ElectionSms() {
                 className="w-full h-auto max-w-sm hover:scale-[1.02] transition-transform duration-300"
               />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Live Video Showcase Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="lg:col-span-6">
+            <TechVideoPlayer 
+              src="/bulk election.mp4" 
+              title="Bulk SMS & Election Campaign Platform Demo" 
+            />
+          </div>
+          <div className="lg:col-span-6 space-y-6">
+            <span className="text-xs font-bold text-brand-orange uppercase tracking-wider">Live Platform Demo</span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-brand-charcoal font-serif">
+              Live Election Bulk SMS Portal
+            </h2>
+            <div className="w-20 h-1 bg-brand-orange rounded"></div>
+            <p className="text-brand-charcoal-light text-sm sm:text-base leading-relaxed font-medium">
+              See our political messaging system in action. Dispatch bulk SMS notifications, candidate manifesto broadcasts, and real-time voter updates with guaranteed high-speed delivery and direct carrier routing.
+            </p>
           </div>
         </div>
       </section>

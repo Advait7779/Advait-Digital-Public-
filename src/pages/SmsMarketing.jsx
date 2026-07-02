@@ -7,6 +7,7 @@ import {
 } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 import PhoneVideoPlayer from '../components/PhoneVideoPlayer';
+import TechVideoPlayer from '../components/TechVideoPlayer';
 
 // Import graphics copied from uploaded assets
 import imgStory from '../assets/sms_story.png';
@@ -176,12 +177,12 @@ export default function SmsMarketing() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
-          {/* Phone threads mockup video on the left */}
-          <div className="lg:col-span-5 flex justify-center">
-            <PhoneVideoPlayer src="/ADVAIT Mobile Sc.mp4" />
+          {/* Horizontal tech video player mockup on the left */}
+          <div className="lg:col-span-6">
+            <TechVideoPlayer src="/bulk election.mp4" title="Bulk SMS & Election Marketing Portal" />
           </div>
 
-          <div className="lg:col-span-7 space-y-10">
+          <div className="lg:col-span-6 space-y-10">
             {/* Marketing SMS */}
             <div className="space-y-4">
               <div className="space-y-1">
