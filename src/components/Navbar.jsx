@@ -177,17 +177,23 @@ export default function Navbar() {
           </div>
 
           {/* Call / Demo CTA Button */}
-          <div className="hidden lg:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-3">
             <a 
               href="tel:+919011251125" 
-              className="flex items-center gap-1.5 text-xs font-bold text-brand-charcoal-light hover:text-brand-orange transition duration-200"
+              className="flex items-center gap-1.5 text-xs font-bold text-brand-charcoal-light hover:text-brand-orange transition duration-200 mr-1"
             >
               <PhoneCall size={16} />
               +91 9011251125
             </a>
             <a 
+              href="https://waba.advaitdigital.co.in/login"
+              className="border border-brand-charcoal/20 text-brand-charcoal hover:border-brand-orange hover:text-brand-orange px-4 py-2 rounded-lg text-sm font-semibold transition duration-200 cursor-pointer text-center"
+            >
+              Login
+            </a>
+            <a 
               href="https://waba.advaitdigital.co.in/register"
-              className="bg-brand-charcoal text-white hover:bg-brand-orange px-5 py-2.5 rounded-lg text-sm font-semibold transition duration-300 shadow-md cursor-pointer text-center"
+              className="bg-brand-charcoal text-white hover:bg-brand-orange px-4 py-2 rounded-lg text-sm font-semibold transition duration-200 shadow-md cursor-pointer text-center"
             >
               Register
             </a>
@@ -275,10 +281,16 @@ export default function Navbar() {
                 Contact
               </Link>
 
-              <div className="pt-4 border-t border-brand-charcoal/5 flex flex-col gap-3">
+              <div className="pt-4 border-t border-brand-charcoal/5 flex items-center gap-3">
+                <a 
+                  href="https://waba.advaitdigital.co.in/login"
+                  className="w-1/2 border border-brand-charcoal/20 text-brand-charcoal hover:border-brand-orange hover:text-brand-orange py-2.5 rounded-lg text-center font-bold text-sm transition duration-200 cursor-pointer block"
+                >
+                  Login
+                </a>
                 <a 
                   href="https://waba.advaitdigital.co.in/register"
-                  className="bg-brand-charcoal text-white hover:bg-brand-orange py-3 rounded-lg text-center font-bold text-sm shadow-md cursor-pointer block"
+                  className="w-1/2 bg-brand-charcoal text-white hover:bg-brand-orange py-2.5 rounded-lg text-center font-bold text-sm shadow-md transition duration-200 cursor-pointer block"
                 >
                   Register
                 </a>
