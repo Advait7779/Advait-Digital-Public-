@@ -71,7 +71,7 @@ export default function TechVideoPlayer({ src, title = "Advait Digital Portal", 
         <div className="relative w-full aspect-[16/9] bg-black overflow-hidden flex items-center justify-center">
           <video
             ref={videoRef}
-            src={src}
+            src={encodeURI(src)}
             className="w-full h-full object-cover"
             autoPlay
             loop

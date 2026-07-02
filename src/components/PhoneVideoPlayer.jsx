@@ -43,7 +43,7 @@ export default function PhoneVideoPlayer({ src, className = "" }) {
       <div className="relative w-full h-full rounded-[28px] overflow-hidden bg-black flex items-center justify-center">
         <video 
           ref={videoRef}
-          src={src} 
+          src={encodeURI(src)} 
           className="w-full h-full object-cover"
           autoPlay 
           loop 
