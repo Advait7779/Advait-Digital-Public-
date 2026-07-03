@@ -1,24 +1,18 @@
 {
-  "name": "advait-digital",
+  "name": "advait-digital-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
-    "server": "node server/index.js",
+    "dev": "vite --host --port 5174",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0 --port 3002",
-    "start": "node server/index.js",
     "lint": "eslint ."
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
     "@tailwindcss/vite": "^4.3.1",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
     "framer-motion": "^12.40.0",
-    "nodemailer": "^9.0.3",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.17.0",

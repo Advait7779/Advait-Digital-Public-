@@ -8,20 +8,26 @@
 const TARGET_NUMBER = '919921968968'; // +91 9921968968
 
 /**
- * Formats the lead data into a clean, left-aligned WhatsApp message
+ * Formats the lead data into a clean, left-aligned WhatsApp message matching exact screenshot:
+ * 
+ * NEW LEAD - ADVAIT DIGITAL
+ * Name: Vaibhav Mhamane
+ * Mobile: 9022687887
+ * Email: mhamanevaibhav15@gmail.com
+ * Service: WhatsApp Marketing Services
  */
 function buildLeadMessage({ name, phone, email, service }) {
   return (
     `NEW LEAD - ADVAIT DIGITAL\n` +
-    `Name:  ${name}\n` +
-    `Mobile:  ${phone}\n` +
-    `Email:  ${email || 'Not provided'}\n` +
-    `Service:  ${service}`
+    `Name: ${name}\n` +
+    `Mobile: ${phone}\n` +
+    `Email: ${email || 'Not provided'}\n` +
+    `Service: ${service}`
   );
 }
 
 /**
- * Opens WhatsApp (App or Web) with the lead alert pre-filled.
+ * Opens WhatsApp (App or Web) with the lead alert pre-filled to +91 9921968968.
  * Guarantees redirection by falling back to location.href if popup is blocked.
  */
 export const sendWhatsAppLeadAlert = (leadData) => {

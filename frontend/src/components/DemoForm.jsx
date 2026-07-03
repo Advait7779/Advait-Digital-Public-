@@ -76,8 +76,8 @@ export default function DemoForm({ defaultService = '' }) {
 
     const serviceLabel = services.find(s => s.value === formData.service)?.label || formData.service;
 
-    // Send email alert in background (non-blocking, instant response)
-    fetch('https://formsubmit.co/ajax/sales@advaitteleservices.com', {
+    // Send lead to backend API for secure email dispatch to sales@advaitteleservices.com
+    fetch('/api/submit-lead', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -89,20 +89,17 @@ export default function DemoForm({ defaultService = '' }) {
         email: formData.email || 'Not provided',
         service: serviceLabel,
         message: formData.message || 'No message provided',
-        _subject: `New Demo Request — ${serviceLabel}`,
-        _template: 'table',
-        _captcha: 'false',
+        sourceForm: 'Demo Request Form (Contact Section)'
       }),
-    }).catch(err => console.warn('Background email dispatch notice:', err));
+    }).catch(() => {});
 
-    // Redirect to WhatsApp exactly 1 second after submission
+    // Trigger pre-filled WhatsApp redirect to +91 9921968968 after 1 second
     setTimeout(() => {
       sendWhatsAppLeadAlert({
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
-        service: serviceLabel,
-        sourceForm: 'Demo Request Form (Contact Section)'
+        service: serviceLabel
       });
     }, 1000);
 

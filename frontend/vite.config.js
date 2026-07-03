@@ -9,7 +9,13 @@ export default defineConfig({
     port: 5174,
     host: true,
     proxy: {
-      // Proxy to 360dialog API (the WhatsApp provider used by WABA platform)
+      // Proxy lead submission API to local Express backend
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+      },
+      // Proxy to 360dialog API
       '/api-360dialog': {
         target: 'https://waba.360dialog.io',
         changeOrigin: true,

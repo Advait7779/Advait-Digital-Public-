@@ -59,7 +59,7 @@ export default function EnquiryModal() {
     if (errorMsg) setErrorMsg('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) {
       setErrorMsg('Please enter your full name');
@@ -78,13 +78,13 @@ export default function EnquiryModal() {
       return;
     }
 
+    setIsSubmitting(true);
     setErrorMsg('');
-    setIsSuccess(true);
 
     const selectedServiceLabel = services.find(s => s.value === formData.service)?.label || formData.service;
 
-    // Send email alert in background (non-blocking, instant response)
-    fetch('https://formsubmit.co/ajax/sales@advaitteleservices.com', {
+    // Send lead to backend API for secure email dispatch to sales@advaitteleservices.com
+    fetch('/api/submit-lead', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -94,21 +94,21 @@ export default function EnquiryModal() {
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
-        product_service: selectedServiceLabel,
-        _subject: `Free Demo Enquiry — ${formData.name}`,
-        _template: 'table',
-        _captcha: 'false',
+        service: selectedServiceLabel,
+        sourceForm: 'Popup Free Demo Modal'
       }),
-    }).catch(err => console.warn('Background email dispatch notice:', err));
+    }).catch(() => {});
 
-    // Redirect to WhatsApp exactly 1 second after submission
+    setIsSuccess(true);
+    setIsSubmitting(false);
+
+    // Trigger pre-filled WhatsApp redirect to +91 9921968968 after 1 second
     setTimeout(() => {
       sendWhatsAppLeadAlert({
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
-        service: selectedServiceLabel,
-        sourceForm: 'Popup Free Demo Modal'
+        service: selectedServiceLabel
       });
     }, 1000);
 
