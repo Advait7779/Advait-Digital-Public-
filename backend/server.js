@@ -15,7 +15,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Enable CORS and JSON parsing
-app.use(cors());
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -33,8 +33,16 @@ function createSmtpTransporter() {
   const { SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS } = process.env;
 
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
+    console.warn('⚠️ [Backend SMTP] Missing SMTP credentials in env:', {
+      hasHost: !!SMTP_HOST,
+      hasUser: !!SMTP_USER,
+      hasPass: !!SMTP_PASS
+    });
     return null;
   }
+
+  // Remove any spaces from Google App Password (e.g. "rtvj luxu szvw kmtv" -> "rtvjluxuszvwkmtv")
+  const cleanPass = SMTP_PASS.replace(/\s+/g, '');
 
   return nodemailer.createTransport({
     host: SMTP_HOST,
@@ -42,7 +50,7 @@ function createSmtpTransporter() {
     secure: SMTP_SECURE === 'true',
     auth: {
       user: SMTP_USER,
-      pass: SMTP_PASS,
+      pass: cleanPass,
     },
   });
 }
@@ -130,8 +138,14 @@ app.post('/api/submit-lead', (req, res) => {
           ? path.join(__dirname, '../frontend/public/favicon.png')
           : path.join(__dirname, 'favicon.png');
 
+        const userEmail = process.env.SMTP_USER || 'support@advaitteleservices.com';
+        const rawFrom = process.env.SMTP_FROM || '';
+        const smtpFrom = (rawFrom && rawFrom.includes('@')) 
+          ? rawFrom 
+          : `"Advait Digital Website" <${userEmail}>`;
+
         const mailOptions = {
-          from: process.env.SMTP_FROM || `"Advait Digital Website" <${process.env.SMTP_USER}>`,
+          from: smtpFrom,
           to: process.env.NOTIFY_EMAIL || 'sales@advaitteleservices.com',
           subject: `🚨 New Lead: ${name} (${service})`,
           attachments: [
