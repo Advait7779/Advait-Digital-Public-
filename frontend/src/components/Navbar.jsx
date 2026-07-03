@@ -4,13 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChatTeardropText, Megaphone, Globe, WhatsappLogo, 
   TrendUp, EnvelopeOpen, PhoneCall, List, X, CaretDown,
-  AppWindow, CheckCircle
+  AppWindow, Phone, ArrowRight, CheckCircle
 } from '@phosphor-icons/react';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [homeAccordionOpen, setHomeAccordionOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -25,11 +26,23 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu on page change
+  // Close mobile drawer on page change
   useEffect(() => {
     setIsOpen(false);
     setDropdownOpen(false);
   }, [location]);
+
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   const serviceLinks = [
     { 
@@ -91,6 +104,11 @@ export default function Navbar() {
   ];
 
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
+
+  const handleOpenDemoModal = () => {
+    setIsOpen(false);
+    window.dispatchEvent(new CustomEvent('open-enquiry-modal'));
+  };
 
   return (
     <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'glass-nav shadow-md' : 'bg-transparent'}`}>
@@ -199,104 +217,172 @@ export default function Navbar() {
             </a>
           </div>
 
-          {/* Mobile menu button */}
-          <div className="lg:hidden flex items-center gap-4">
+          {/* Mobile menu trigger hamburger button */}
+          <div className="lg:hidden flex items-center gap-3">
             <a 
               href="tel:+919011251125" 
-              className="p-2 rounded-lg bg-brand-cream text-brand-charcoal-light hover:bg-brand-yellow/30 transition-colors duration-200"
+              className="p-2 rounded-xl bg-brand-cream text-brand-charcoal-light hover:bg-brand-yellow/30 transition-colors duration-200"
             >
-              <PhoneCall size={18} />
+              <PhoneCall size={20} />
             </a>
             <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-lg bg-brand-charcoal text-white hover:bg-brand-orange transition-colors duration-200 cursor-pointer"
+              onClick={() => setIsOpen(true)}
+              className="p-2.5 rounded-xl bg-brand-charcoal text-white hover:bg-brand-orange transition-colors duration-200 cursor-pointer shadow-sm"
+              aria-label="Open mobile menu"
             >
-              {isOpen ? <X size={20} /> : <List size={20} />}
+              <List size={22} weight="bold" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu Slideout */}
+      {/* ── Mobile Right-Side Drawer Panel (Matching AutoSensy Style) ── */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="lg:hidden bg-white border-b border-brand-charcoal/5 shadow-inner"
-          >
-            <div className="px-4 pt-3 pb-6 space-y-3 font-semibold text-base">
-              <Link 
-                to="/" 
-                className="block px-3 py-2 rounded-lg hover:bg-brand-cream/30 text-brand-charcoal"
-              >
-                Home
-              </Link>
-              
-              <Link 
-                to="/about" 
-                className="block px-3 py-2 rounded-lg hover:bg-brand-cream/30 text-brand-charcoal"
-              >
-                About Us
-              </Link>
+          <>
+            {/* Dark Backdrop Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 lg:hidden"
+            />
 
-              {/* Mobile Services Accordion */}
+            {/* Right-Side Sliding Panel */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+              className="fixed inset-y-0 right-0 z-50 w-[85%] max-w-[340px] bg-white shadow-2xl flex flex-col justify-between lg:hidden border-l border-brand-charcoal/10"
+            >
+              {/* Drawer Header */}
               <div>
-                <button 
-                  onClick={toggleDropdown}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-brand-cream/30 text-brand-charcoal text-left cursor-pointer"
+                <div className="flex items-center justify-between p-5 border-b border-gray-100">
+                  <div className="flex items-center gap-2.5">
+                    <img
+                      src="/favicon.png"
+                      alt="Advait Digital"
+                      className="h-8 w-8 rounded-lg object-cover border border-brand-charcoal/5"
+                    />
+                    <span className="font-serif text-lg font-bold text-brand-charcoal">
+                      Advait <span className="text-brand-orange">Digital</span>
+                    </span>
+                  </div>
+                  
+                  {/* Rounded Close Cross Button matching screenshot 2 */}
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 text-gray-500 hover:text-brand-orange hover:border-brand-orange hover:bg-brand-orange/5 flex items-center justify-center transition-all duration-200 cursor-pointer"
+                    aria-label="Close menu"
+                  >
+                    <X size={18} weight="bold" />
+                  </button>
+                </div>
+
+                {/* Navigation Links Accordion List */}
+                <div className="p-4 space-y-2 overflow-y-auto max-h-[calc(100vh-220px)]">
+                  {/* Home */}
+                  <div className="rounded-xl overflow-hidden bg-gray-50/70 border border-gray-100">
+                    <button
+                      onClick={() => setHomeAccordionOpen(prev => !prev)}
+                      className="w-full px-4 py-3 flex items-center justify-between font-bold text-sm text-emerald-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
+                      <span>Home</span>
+                      <CaretDown
+                        size={16}
+                        className={`transition-transform duration-200 ${homeAccordionOpen ? 'transform rotate-180' : ''}`}
+                      />
+                    </button>
+                    {homeAccordionOpen && (
+                      <div className="px-4 pb-3 pt-1 border-t border-gray-100 bg-white space-y-2 text-xs font-semibold text-brand-charcoal-light">
+                        <Link to="/" className="block py-1.5 hover:text-brand-orange">Main Landing Page</Link>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Services Accordion */}
+                  <div className="rounded-xl overflow-hidden bg-gray-50/70 border border-gray-100">
+                    <button
+                      onClick={toggleDropdown}
+                      className="w-full px-4 py-3 flex items-center justify-between font-bold text-sm text-brand-charcoal hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
+                      <span>Services</span>
+                      <CaretDown
+                        size={16}
+                        className={`transition-transform duration-200 ${dropdownOpen ? 'transform rotate-180' : ''}`}
+                      />
+                    </button>
+
+                    <AnimatePresence>
+                      {dropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="bg-white border-t border-gray-100 px-3 py-2 space-y-1"
+                        >
+                          {serviceLinks.map((srv, idx) => (
+                            <Link
+                              key={idx}
+                              to={srv.path}
+                              onClick={() => setIsOpen(false)}
+                              className="flex items-center justify-between p-2 rounded-lg text-xs font-semibold text-brand-charcoal hover:text-brand-orange hover:bg-brand-cream/30 transition-colors"
+                            >
+                              <span className="truncate">{srv.name}</span>
+                              <ArrowRight size={12} className="text-brand-charcoal-light/40 shrink-0" />
+                            </Link>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* About Us */}
+                  <Link
+                    to="/about"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50/70 border border-gray-100 font-bold text-sm text-brand-charcoal hover:bg-gray-100 transition-colors"
+                  >
+                    <span>About Us</span>
+                    <CaretDown size={16} className="text-gray-400 transform -rotate-90" />
+                  </Link>
+
+                  {/* Contact */}
+                  <Link
+                    to="/contact"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50/70 border border-gray-100 font-bold text-sm text-brand-charcoal hover:bg-gray-100 transition-colors"
+                  >
+                    <span>Contact</span>
+                    <CaretDown size={16} className="text-gray-400 transform -rotate-90" />
+                  </Link>
+                </div>
+              </div>
+
+              {/* Drawer Footer Buttons (Call for Demo & Contact Us - Matching Screenshot 2) */}
+              <div className="p-5 border-t border-gray-100 space-y-3 bg-white">
+                <button
+                  onClick={handleOpenDemoModal}
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm py-3 rounded-full flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 transition-all duration-200 cursor-pointer"
                 >
-                  <span>Services</span>
-                  <CaretDown size={16} className={`transform transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
+                  <span>Free Demo Request</span>
+                  <Phone size={18} weight="fill" />
                 </button>
 
-                <AnimatePresence>
-                  {dropdownOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="pl-6 pr-2 py-1 space-y-1 bg-brand-cream/10 rounded-lg mt-1"
-                    >
-                      {serviceLinks.map((srv, idx) => (
-                        <Link
-                          key={idx}
-                          to={srv.path}
-                          className="block py-2 text-sm text-brand-charcoal-light hover:text-brand-orange font-medium"
-                        >
-                          {srv.name}
-                        </Link>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <Link 
-                to="/contact" 
-                className="block px-3 py-2 rounded-lg hover:bg-brand-cream/30 text-brand-charcoal"
-              >
-                Contact
-              </Link>
-
-              <div className="pt-4 border-t border-brand-charcoal/5 flex items-center gap-3">
-                <a 
-                  href="https://waba.advaitdigital.co.in/login"
-                  className="w-1/2 border border-brand-charcoal/20 text-brand-charcoal hover:border-brand-orange hover:text-brand-orange py-2.5 rounded-lg text-center font-bold text-sm transition duration-200 cursor-pointer block"
+                <Link
+                  to="/contact"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full bg-white border border-brand-charcoal text-brand-charcoal hover:bg-brand-charcoal hover:text-white font-bold text-sm py-3 rounded-full flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer"
                 >
-                  Login
-                </a>
-                <a 
-                  href="https://waba.advaitdigital.co.in/register"
-                  className="w-1/2 bg-brand-charcoal text-white hover:bg-brand-orange py-2.5 rounded-lg text-center font-bold text-sm shadow-md transition duration-200 cursor-pointer block"
-                >
-                  Register
-                </a>
+                  <span>Contact Us</span>
+                  <ArrowRight size={16} weight="bold" />
+                </Link>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </nav>

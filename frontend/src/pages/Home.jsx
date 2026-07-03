@@ -489,7 +489,7 @@ export default function Home() {
                     >
                       <Link
                         to={banner.path}
-                        className="w-full sm:w-auto bg-brand-charcoal text-white hover:bg-brand-orange px-5 py-2.5 rounded-lg font-semibold shadow-sm transition duration-200 flex items-center justify-center gap-1.5 cursor-pointer text-xs"
+                        className="w-auto max-w-[85%] sm:max-w-none bg-brand-charcoal text-white hover:bg-brand-orange px-5 py-2.5 rounded-lg font-semibold shadow-sm transition duration-200 inline-flex items-center justify-center gap-1.5 cursor-pointer text-xs"
                       >
                         {banner.btnText}
                         <ArrowRight size={16} />
