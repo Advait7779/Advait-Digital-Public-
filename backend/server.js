@@ -139,10 +139,14 @@ app.post('/api/submit-lead', (req, res) => {
           : path.join(__dirname, 'favicon.png');
 
         const userEmail = process.env.SMTP_USER || 'support@advaitteleservices.com';
-        const rawFrom = process.env.SMTP_FROM || '';
-        const smtpFrom = (rawFrom && rawFrom.includes('@')) 
-          ? rawFrom 
-          : `"Advait Digital Website" <${userEmail}>`;
+        const rawFrom = (process.env.SMTP_FROM || '').trim();
+        let smtpFrom = `"Advait Digital Website" <${userEmail}>`;
+
+        if (rawFrom.includes('<') && rawFrom.includes('>')) {
+          smtpFrom = rawFrom;
+        } else if (rawFrom.includes('@')) {
+          smtpFrom = `"Advait Digital Website" <${rawFrom}>`;
+        }
 
         const mailOptions = {
           from: smtpFrom,
