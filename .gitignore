@@ -1,9 +1,11 @@
 # Environment & Secret files
 .env
-.env.*
+.env.local
 *.env
 **/.env
-**/.env.*
+**/.env.local
+!.env.example
+!**/.env.example
 
 # Dependencies
 node_modules/
