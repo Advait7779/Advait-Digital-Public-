@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Play, SpeakerSimpleHigh, SpeakerSimpleSlash } from '@phosphor-icons/react';
 
@@ -6,15 +6,40 @@ export default function PhoneVideoPlayer({ src, className = "" }) {
   const videoRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [userManuallyPaused, setUserManuallyPaused] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          if (!userManuallyPaused) {
+            video.play().catch(() => {});
+            setIsPaused(false);
+          }
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.35 }
+    );
+
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, [userManuallyPaused]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
     if (videoRef.current.paused) {
       videoRef.current.play().catch(err => console.log(err));
       setIsPaused(false);
+      setUserManuallyPaused(false);
     } else {
       videoRef.current.pause();
       setIsPaused(true);
+      setUserManuallyPaused(true);
     }
   };
 

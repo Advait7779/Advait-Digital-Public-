@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
+import EnquiryModal from './components/EnquiryModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Page Imports
@@ -93,6 +94,9 @@ export default function App() {
             Chat with us
           </span>
         </a>
+
+        {/* Enquiry Modal Popup */}
+        <EnquiryModal />
       </div>
 
       {/* Full-screen Redirect Transition Overlay */}
