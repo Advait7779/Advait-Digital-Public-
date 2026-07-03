@@ -75,9 +75,10 @@ export default function DemoForm({ defaultService = '' }) {
     setIsSuccess(true);
 
     const serviceLabel = services.find(s => s.value === formData.service)?.label || formData.service;
+    const backendEndpoint = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/submit-lead` : '/api/submit-lead';
 
     // Send lead to backend API for secure email dispatch to sales@advaitteleservices.com
-    fetch('/api/submit-lead', {
+    fetch(backendEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
