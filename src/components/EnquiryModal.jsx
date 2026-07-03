@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle, Spinner, CaretDown, PaperPlaneTilt } from '@phosphor-icons/react';
+import { sendWhatsAppLeadAlert } from '../services/whatsappService';
 
 export default function EnquiryModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -58,7 +59,7 @@ export default function EnquiryModal() {
     if (errorMsg) setErrorMsg('');
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name.trim()) {
       setErrorMsg('Please enter your full name');
@@ -77,49 +78,45 @@ export default function EnquiryModal() {
       return;
     }
 
-    setIsSubmitting(true);
     setErrorMsg('');
+    setIsSuccess(true);
 
     const selectedServiceLabel = services.find(s => s.value === formData.service)?.label || formData.service;
 
-    try {
-      const response = await fetch('https://formsubmit.co/ajax/sales@advaitteleservices.com', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          phone: formData.phone,
-          email: formData.email,
-          product_service: selectedServiceLabel,
-          _subject: `Free Demo Enquiry — ${formData.name}`,
-          _template: 'table',
-          _captcha: 'false',
-        }),
-      });
+    // Send email alert in background (non-blocking, instant response)
+    fetch('https://formsubmit.co/ajax/sales@advaitteleservices.com', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        product_service: selectedServiceLabel,
+        _subject: `Free Demo Enquiry — ${formData.name}`,
+        _template: 'table',
+        _captcha: 'false',
+      }),
+    }).catch(err => console.warn('Background email dispatch notice:', err));
 
-      if (response.ok) {
-        setIsSuccess(true);
-        setTimeout(() => {
-          setIsSuccess(false);
-          setIsOpen(false);
-          setFormData({ name: '', phone: '', email: '', service: 'election_sms' });
-        }, 3500);
-      } else {
-        throw new Error('Failed to send enquiry');
-      }
-    } catch (err) {
-      setIsSuccess(true);
-      setTimeout(() => {
-        setIsSuccess(false);
-        setIsOpen(false);
-        setFormData({ name: '', phone: '', email: '', service: 'election_sms' });
-      }, 3500);
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Redirect to WhatsApp exactly 1 second after submission
+    setTimeout(() => {
+      sendWhatsAppLeadAlert({
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        service: selectedServiceLabel,
+        sourceForm: 'Popup Free Demo Modal'
+      });
+    }, 1000);
+
+    setTimeout(() => {
+      setIsSuccess(false);
+      setIsOpen(false);
+      setFormData({ name: '', phone: '', email: '', service: 'election_sms' });
+    }, 3500);
   };
 
   return (

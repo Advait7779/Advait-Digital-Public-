@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PaperPlaneTilt, CheckCircle, Spinner } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
+import { sendWhatsAppLeadAlert } from '../services/whatsappService';
 
 export default function DemoForm({ defaultService = '' }) {
   const [formData, setFormData] = useState({
@@ -66,53 +67,53 @@ export default function DemoForm({ defaultService = '' }) {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!validate()) return;
 
-    setIsSubmitting(true);
     setSubmitError('');
+    setIsSuccess(true);
 
     const serviceLabel = services.find(s => s.value === formData.service)?.label || formData.service;
 
-    try {
-      const response = await fetch('https://formsubmit.co/ajax/sales@advaitteleservices.com', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          phone: formData.phone,
-          email: formData.email || 'Not provided',
-          service: serviceLabel,
-          message: formData.message || 'No message provided',
-          _subject: `New Demo Request — ${serviceLabel}`,
-          _template: 'table',
-          _captcha: 'false',
-        }),
-      });
+    // Send email alert in background (non-blocking, instant response)
+    fetch('https://formsubmit.co/ajax/sales@advaitteleservices.com', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email || 'Not provided',
+        service: serviceLabel,
+        message: formData.message || 'No message provided',
+        _subject: `New Demo Request — ${serviceLabel}`,
+        _template: 'table',
+        _captcha: 'false',
+      }),
+    }).catch(err => console.warn('Background email dispatch notice:', err));
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Submission failed');
-      }
-
-      setIsSuccess(true);
-      setFormData({
-        name: '',
-        phone: '',
-        email: '',
-        service: defaultService,
-        message: '',
-        consent: false
+    // Redirect to WhatsApp exactly 1 second after submission
+    setTimeout(() => {
+      sendWhatsAppLeadAlert({
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        service: serviceLabel,
+        sourceForm: 'Demo Request Form (Contact Section)'
       });
-    } catch {
-      setSubmitError('Something went wrong. Please try again or call us directly.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    }, 1000);
+
+    setFormData({
+      name: '',
+      phone: '',
+      email: '',
+      service: defaultService,
+      message: '',
+      consent: false
+    });
   };
 
   return (
