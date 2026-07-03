@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "npm --prefix frontend run dev",
-    "build": "cd frontend && npm install && npm run build",
+    "build": "node build-all.js",
     "preview": "npm --prefix frontend run preview",
     "server": "node backend/server.js",
     "start": "node backend/server.js"
