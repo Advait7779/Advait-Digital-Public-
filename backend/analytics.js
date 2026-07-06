@@ -12,14 +12,21 @@ const MAX_VISITS = 10000; // Keep last 10,000 visits in rolling log
  * Reads the analytics data file, returning { visits: [], totalCount: number }
  */
 function readData() {
+  const BASE_OFFSET = 16000;
   try {
     if (!fs.existsSync(ANALYTICS_FILE)) {
-      return { visits: [], totalCount: 0 };
+      return { visits: [], totalCount: BASE_OFFSET };
     }
     const raw = fs.readFileSync(ANALYTICS_FILE, 'utf8');
-    return JSON.parse(raw);
+    const data = JSON.parse(raw);
+    
+    // Ensure count is at least 16,000 if not set or lower
+    if (!data.totalCount || data.totalCount < BASE_OFFSET) {
+      data.totalCount = BASE_OFFSET;
+    }
+    return data;
   } catch {
-    return { visits: [], totalCount: 0 };
+    return { visits: [], totalCount: BASE_OFFSET };
   }
 }
 
