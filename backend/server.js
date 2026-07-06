@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { recordVisit, getStats } from './analytics.js';
 
 dotenv.config();
 
@@ -218,6 +219,49 @@ app.post('/api/submit-lead', (req, res) => {
     // B. Dispatch WABA Alert
     await sendWabaAlert({ name, phone, email, service, sourceForm });
   });
+});
+
+/**
+ * Analytics: Record a page visit
+ * POST /api/analytics/visit
+ * Body: { page, referrer, utm_source, utm_medium, utm_campaign, device, browser, sessionId }
+ */
+app.post('/api/analytics/visit', (req, res) => {
+  try {
+    const visitorIp =
+      req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+      req.socket?.remoteAddress ||
+      '';
+
+    const count = recordVisit({ ...req.body, ip: visitorIp });
+    res.json({ success: true, totalCount: count });
+  } catch (err) {
+    console.error('❌ [Analytics] visit record error:', err.message);
+    res.json({ success: false });
+  }
+});
+
+/**
+ * Analytics: Public stats (safe to expose — no IP/session data)
+ * GET /api/analytics/public-stats
+ */
+app.get('/api/analytics/public-stats', (req, res) => {
+  try {
+    const stats = getStats();
+    // Only return non-sensitive aggregate fields for the public badge
+    res.json({
+      totalCount: stats.totalCount,
+      todayCount: stats.todayCount,
+      weekCount: stats.weekCount,
+      dailyVisits: stats.dailyVisits,
+      topPages: stats.topPages,
+      deviceBreakdown: stats.deviceBreakdown,
+      lastUpdated: stats.lastUpdated,
+    });
+  } catch (err) {
+    console.error('❌ [Analytics] stats error:', err.message);
+    res.status(500).json({ error: 'Stats unavailable' });
+  }
 });
 
 app.listen(PORT, () => {

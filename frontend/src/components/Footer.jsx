@@ -1,9 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, Envelope, MapPin, FacebookLogo, TwitterLogo, LinkedinLogo, ArrowUpRight } from '@phosphor-icons/react';
+import { Phone, Envelope, MapPin, FacebookLogo, TwitterLogo, LinkedinLogo, ArrowUpRight, Eye } from '@phosphor-icons/react';
+import { fetchVisitorStats } from '../services/analytics';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [visitorCount, setVisitorCount] = useState(null);
+
+  useEffect(() => {
+    fetchVisitorStats().then(stats => {
+      if (stats && stats.totalCount) setVisitorCount(stats.totalCount);
+    });
+  }, []);
 
   const services = [
     { name: 'Rich Communication Service (RCS)', path: '/services/rcs' },
@@ -129,6 +137,17 @@ export default function Footer() {
           <p>
             Copyright &copy; {currentYear} Advait Teleservices Private Limited. All rights reserved.
           </p>
+
+          {/* Visitor Counter Badge */}
+          {visitorCount !== null && (
+            <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full px-3 py-1.5">
+              <Eye size={13} className="text-brand-orange" weight="fill" />
+              <span className="text-white/60 text-[10px] font-semibold tabular-nums">
+                {visitorCount.toLocaleString('en-IN')}+ visitors
+              </span>
+            </div>
+          )}
+
           <div className="flex gap-6">
             <Link to="/terms-and-conditions" className="hover:text-brand-orange transition duration-150">Terms of Service</Link>
             <a href="#" className="hover:text-brand-orange transition duration-150">Privacy Policy</a>

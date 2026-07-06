@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import EnquiryModal from './components/EnquiryModal';
+import CookieConsent from './components/CookieConsent';
+import { trackVisit } from './services/analytics';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Page Imports
@@ -20,6 +22,18 @@ import WhatsappApi from './pages/WhatsappApi';
 import VoiceCall from './pages/VoiceCall';
 import TermsConditions from './pages/TermsConditions';
 import Careers from './pages/Careers';
+
+/** Inner component so useLocation is available inside Router */
+function AppContent() {
+  const location = useLocation();
+
+  useEffect(() => {
+    // Track page view on every route change (self-hosted, privacy-safe)
+    trackVisit(location.pathname);
+  }, [location.pathname]);
+
+  return null; // renders nothing — just tracks
+}
 
 export default function App() {
   const [redirectUrl, setRedirectUrl] = useState(null);
@@ -47,6 +61,7 @@ export default function App() {
 
   return (
     <Router>
+      <AppContent />
       <ScrollToTop />
       <div className="flex flex-col min-h-screen bg-brand-cream-light font-sans text-brand-charcoal antialiased">
         {/* Navigation Header */}
@@ -94,6 +109,9 @@ export default function App() {
             Chat with us
           </span>
         </a>
+
+        {/* Cookie Consent Banner */}
+        <CookieConsent />
 
         {/* Enquiry Modal Popup */}
         <EnquiryModal />
