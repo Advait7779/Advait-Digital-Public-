@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import SEOHead from '../components/SEOHead';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Megaphone, PhoneCall, WhatsappLogo, ArrowLeft, ArrowRight,
@@ -119,6 +120,46 @@ const ElectionChatStream = () => {
 export default function ElectionSms() {
   return (
     <div className="pt-24 space-y-12 sm:space-y-16 md:space-y-24 pb-12 sm:pb-16 md:pb-20 bg-brand-cream-light">
+      <SEOHead
+        title="Election Bulk SMS & Voice Call Service India — Political Campaign Messaging"
+        description="Advait Digital provides bulk SMS, voice call, and WhatsApp services for election campaigns in India. Reach lakhs of voters with candidate speech broadcasts, manifesto SMS, and automated voter outreach."
+        keywords="election bulk SMS India, political campaign SMS, voter outreach SMS, election voice call service, bulk SMS election campaign, political SMS India, candidate SMS broadcast, election WhatsApp campaign, election messaging service India"
+        canonical="/services/election-sms"
+        schema={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "Election Bulk SMS & Voice Call Service",
+            "provider": { "@type": "Organization", "name": "Advait Digital", "url": "https://advaitdigital.co.in" },
+            "areaServed": "India",
+            "description": "Bulk SMS, voice call, and WhatsApp services for political campaigns and election voter outreach.",
+            "url": "https://advaitdigital.co.in/services/election-sms",
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.9",
+              "reviewCount": "115"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://advaitdigital.co.in/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Election SMS & Voice Services",
+                "item": "https://advaitdigital.co.in/services/election-sms"
+              }
+            ]
+          }
+        ]}
+      />
       
       {/* Hero Banner with High Contrast and Legibility */}
       <section className="bg-[#0b1b36] text-white py-12 sm:py-16 md:py-20 relative overflow-hidden">

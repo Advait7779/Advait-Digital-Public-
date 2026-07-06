@@ -1,4 +1,5 @@
 import React from 'react';
+import SEOHead from '../components/SEOHead';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
@@ -49,6 +50,30 @@ export default function TermsConditions() {
 
   return (
     <div className="pt-24 min-h-screen bg-brand-cream-light font-sans text-brand-charcoal">
+      <SEOHead
+        title="Terms & Conditions — Advait Digital"
+        description="Read the terms and conditions for using Advait Digital's bulk SMS, WhatsApp API, RCS messaging, voice call, and digital marketing services in India."
+        keywords="Advait Digital terms and conditions, SMS service terms India, WhatsApp API terms, digital marketing terms of service"
+        canonical="/terms-and-conditions"
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://advaitdigital.co.in/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Terms and Conditions",
+              "item": "https://advaitdigital.co.in/terms-and-conditions"
+            }
+          ]
+        }}
+      />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-8">
         
         {/* Back Link */}

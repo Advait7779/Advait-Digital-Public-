@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import SEOHead from '../components/SEOHead';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
@@ -433,6 +434,23 @@ export default function Home() {
 
   return (
     <div className="pt-24 space-y-24">
+      <SEOHead
+        title="Bulk SMS, WhatsApp API, RCS Messaging & Digital Marketing Services India"
+        description="Advait Digital provides bulk SMS marketing, WhatsApp Business API, RCS messaging, voice call, digital marketing, and web design services across India. Based in Pune, Maharashtra."
+        keywords="bulk SMS service India, WhatsApp Business API India, RCS messaging India, voice call service India, digital marketing Pune, bulk SMS Pune, WhatsApp marketing India, election SMS service, SMS marketing company India, web design Pune, Advait Digital"
+        canonical="/"
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Advait Digital",
+          "url": "https://advaitdigital.co.in",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://advaitdigital.co.in/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }}
+      />
 
       {/* ── Sliding Banner Hero Section ──────────────────────────── */}
       <section className="bg-brand-cream relative overflow-hidden">

@@ -1,4 +1,5 @@
 import React from 'react';
+import SEOHead from '../components/SEOHead';
 import { 
   ShieldCheck, Eye, Target, ListChecks,
   ArrowRight, Check
@@ -49,6 +50,30 @@ export default function About() {
 
   return (
     <div className="pt-24 space-y-12 sm:space-y-16 md:space-y-20 pb-12 sm:pb-16 md:pb-20 bg-brand-cream-light">
+      <SEOHead
+        title="About Advait Digital — Bulk SMS & Digital Marketing Company Pune India"
+        description="Advait Teleservices Private Limited (Advait Digital) is a leading SMS service provider, WhatsApp API partner, and digital marketing company based in Pune, India. Trusted by businesses across India."
+        keywords="about Advait Digital, Advait Teleservices Private Limited, bulk SMS company Pune, digital marketing company India, SMS service provider India, WhatsApp API company Pune, RCS messaging company, about us, messaging service Pune"
+        canonical="/about"
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://advaitdigital.co.in/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "About Us",
+              "item": "https://advaitdigital.co.in/about"
+            }
+          ]
+        }}
+      />
 
       {/* Hero Banner */}
       <section className="relative overflow-hidden bg-gradient-to-br from-brand-orange via-[#c0392b] to-[#4a148c] text-white py-12 sm:py-16 md:py-20 lg:py-24">

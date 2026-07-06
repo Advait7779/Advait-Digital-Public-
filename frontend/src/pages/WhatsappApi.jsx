@@ -1,4 +1,5 @@
 import React from 'react';
+import SEOHead from '../components/SEOHead';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, ArrowRight, ChatCircleDots, Handshake, 
@@ -78,6 +79,46 @@ export default function WhatsappApi() {
 
   return (
     <div className="pt-24 space-y-12 sm:space-y-16 md:space-y-24 pb-12 sm:pb-16 md:pb-20 bg-brand-cream-light">
+      <SEOHead
+        title="WhatsApp Business API Provider India — WABA Integration & Chatbot"
+        description="Get the official WhatsApp Business API from Advait Digital. Automate customer conversations, send transactional alerts, build chatbots, and manage multi-agent team inboxes. Serving all of India."
+        keywords="WhatsApp Business API India, WABA provider India, WhatsApp API integration, WhatsApp chatbot India, WhatsApp automated messages, WhatsApp API provider Pune, official WhatsApp API, Meta WhatsApp Business, WhatsApp notification API"
+        canonical="/services/whatsapp-api"
+        schema={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "WhatsApp Business API Integration",
+            "provider": { "@type": "Organization", "name": "Advait Digital", "url": "https://advaitdigital.co.in" },
+            "areaServed": "India",
+            "description": "Official WhatsApp Business API integration for automating customer communication, chatbots, and transactional notifications.",
+            "url": "https://advaitdigital.co.in/services/whatsapp-api",
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.9",
+              "reviewCount": "210"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://advaitdigital.co.in/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "WhatsApp Business API",
+                "item": "https://advaitdigital.co.in/services/whatsapp-api"
+              }
+            ]
+          }
+        ]}
+      />
       
       {/* Hero Banner with High Contrast and Muted Elegance */}
       <section className="bg-[#0b281b] text-white py-12 sm:py-16 md:py-20 relative overflow-hidden">

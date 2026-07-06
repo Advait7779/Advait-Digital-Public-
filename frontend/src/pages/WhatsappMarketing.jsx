@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import SEOHead from '../components/SEOHead';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Globe, Robot, FileArrowUp, CurrencyInr, CheckCircle, 
@@ -100,6 +101,46 @@ export default function WhatsappMarketing() {
 
   return (
     <div className="pt-24 space-y-12 sm:space-y-16 md:space-y-24 pb-12 sm:pb-16 md:pb-20 bg-brand-cream-light font-sans">
+      <SEOHead
+        title="WhatsApp Marketing Service India — Bulk WhatsApp Broadcast & Campaigns"
+        description="Advait Digital offers WhatsApp marketing services in India including bulk broadcast, rich media campaigns, automated chatbot flows, and product showcase. Reach millions on WhatsApp instantly."
+        keywords="WhatsApp marketing India, bulk WhatsApp message India, WhatsApp broadcast service, WhatsApp campaign India, WhatsApp business marketing, WhatsApp bulk sender India, WhatsApp marketing Pune, WhatsApp promotional messages"
+        canonical="/services/whatsapp-marketing"
+        schema={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "WhatsApp Marketing Service",
+            "provider": { "@type": "Organization", "name": "Advait Digital", "url": "https://advaitdigital.co.in" },
+            "areaServed": "India",
+            "description": "Bulk WhatsApp marketing campaigns with rich media, broadcast lists, and automated chatbot flows.",
+            "url": "https://advaitdigital.co.in/services/whatsapp-marketing",
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.8",
+              "reviewCount": "142"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://advaitdigital.co.in/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "WhatsApp Marketing Service",
+                "item": "https://advaitdigital.co.in/services/whatsapp-marketing"
+              }
+            ]
+          }
+        ]}
+      />
       
       {/* High-Contrast Emerald Green Hero Section */}
       <section className="bg-[#0b2b1b] text-white py-12 sm:py-16 md:py-20 relative overflow-hidden">

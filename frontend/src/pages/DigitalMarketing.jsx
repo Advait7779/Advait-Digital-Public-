@@ -1,4 +1,5 @@
 import React from 'react';
+import SEOHead from '../components/SEOHead';
 import { 
   Users, Cpu, FileText, Target, ShieldCheck, 
   ArrowLeft, ArrowRight, Megaphone, Laptop, 
@@ -89,6 +90,46 @@ export default function DigitalMarketing() {
 
   return (
     <div className="pt-24 space-y-12 sm:space-y-16 md:space-y-24 pb-12 sm:pb-16 md:pb-20 bg-brand-cream-light font-sans">
+      <SEOHead
+        title="Digital Marketing Services Pune India — SEO, Social Media & Google Ads"
+        description="Advait Digital offers full-service digital marketing in Pune and across India. Services include SEO, social media marketing, Google Ads, content marketing, and ROI-driven lead generation campaigns."
+        keywords="digital marketing services Pune, digital marketing India, SEO service Pune, social media marketing India, Google Ads management India, content marketing, lead generation India, online marketing Pune, digital marketing company Pune"
+        canonical="/services/digital-marketing"
+        schema={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "Digital Marketing Services",
+            "provider": { "@type": "Organization", "name": "Advait Digital", "url": "https://advaitdigital.co.in" },
+            "areaServed": "India",
+            "description": "Full-service digital marketing including SEO, social media, Google Ads, and ROI-driven lead generation.",
+            "url": "https://advaitdigital.co.in/services/digital-marketing",
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.9",
+              "reviewCount": "165"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://advaitdigital.co.in/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Digital Marketing Services",
+                "item": "https://advaitdigital.co.in/services/digital-marketing"
+              }
+            ]
+          }
+        ]}
+      />
       
       {/* High-Contrast Hero Banner */}
       <section className="bg-[#0c1b3d] text-white py-12 sm:py-16 md:py-20 relative overflow-hidden">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -8,20 +8,28 @@ import CookieConsent from './components/CookieConsent';
 import { trackVisit } from './services/analytics';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Page Imports
-import Home from './pages/Home';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import RcsMessaging from './pages/RcsMessaging';
-import ElectionSms from './pages/ElectionSms';
-import WebDev from './pages/WebDev';
-import WhatsappMarketing from './pages/WhatsappMarketing';
-import DigitalMarketing from './pages/DigitalMarketing';
-import SmsMarketing from './pages/SmsMarketing';
-import WhatsappApi from './pages/WhatsappApi';
-import VoiceCall from './pages/VoiceCall';
-import TermsConditions from './pages/TermsConditions';
-import Careers from './pages/Careers';
+// Lazy-loaded Page Imports for code-splitting (SEO performance)
+const Home = lazy(() => import('./pages/Home'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const RcsMessaging = lazy(() => import('./pages/RcsMessaging'));
+const ElectionSms = lazy(() => import('./pages/ElectionSms'));
+const WebDev = lazy(() => import('./pages/WebDev'));
+const WhatsappMarketing = lazy(() => import('./pages/WhatsappMarketing'));
+const DigitalMarketing = lazy(() => import('./pages/DigitalMarketing'));
+const SmsMarketing = lazy(() => import('./pages/SmsMarketing'));
+const WhatsappApi = lazy(() => import('./pages/WhatsappApi'));
+const VoiceCall = lazy(() => import('./pages/VoiceCall'));
+const TermsConditions = lazy(() => import('./pages/TermsConditions'));
+const Careers = lazy(() => import('./pages/Careers'));
+
+// Premium, minimal loading spinner fallback matching the site theme
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[60vh] bg-brand-cream-light">
+    <div className="w-8 h-8 border-3 border-brand-orange border-t-transparent rounded-full animate-spin"></div>
+  </div>
+);
+
 
 /** Inner component so useLocation is available inside Router */
 function AppContent() {
@@ -69,23 +77,25 @@ export default function App() {
         
         {/* Main Content Area */}
         <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/terms-and-conditions" element={<TermsConditions />} />
-            <Route path="/careers" element={<Careers />} />
-            
-            {/* 8 Digital Services Routes */}
-            <Route path="/services/rcs" element={<RcsMessaging />} />
-            <Route path="/services/election-sms" element={<ElectionSms />} />
-            <Route path="/services/web-dev" element={<WebDev />} />
-            <Route path="/services/whatsapp-marketing" element={<WhatsappMarketing />} />
-            <Route path="/services/digital-marketing" element={<DigitalMarketing />} />
-            <Route path="/services/sms-marketing" element={<SmsMarketing />} />
-            <Route path="/services/whatsapp-api" element={<WhatsappApi />} />
-            <Route path="/services/voice-call" element={<VoiceCall />} />
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/terms-and-conditions" element={<TermsConditions />} />
+              <Route path="/careers" element={<Careers />} />
+              
+              {/* 8 Digital Services Routes */}
+              <Route path="/services/rcs" element={<RcsMessaging />} />
+              <Route path="/services/election-sms" element={<ElectionSms />} />
+              <Route path="/services/web-dev" element={<WebDev />} />
+              <Route path="/services/whatsapp-marketing" element={<WhatsappMarketing />} />
+              <Route path="/services/digital-marketing" element={<DigitalMarketing />} />
+              <Route path="/services/sms-marketing" element={<SmsMarketing />} />
+              <Route path="/services/whatsapp-api" element={<WhatsappApi />} />
+              <Route path="/services/voice-call" element={<VoiceCall />} />
+            </Routes>
+          </Suspense>
         </main>
         
         {/* Footer */}

@@ -1,4 +1,5 @@
 import React from 'react';
+import SEOHead from '../components/SEOHead';
 import { 
   Globe, Code, Cpu, Laptop, ShoppingCart, 
   ArrowsMerge, ArrowLeft, ArrowRight, Gear, Browser,
@@ -250,6 +251,46 @@ const TrainTimeline = () => {
 export default function WebDev() {
   return (
     <div className="pt-24 space-y-12 sm:space-y-16 md:space-y-24 pb-12 sm:pb-16 md:pb-20 bg-brand-cream-light font-sans">
+      <SEOHead
+        title="Website Design & Development Company Pune India — Responsive Web Solutions"
+        description="Advait Digital is a top website design and development company in Pune, India. We build responsive, SEO-friendly business websites, e-commerce portals, and custom web applications."
+        keywords="website design company Pune, web development India, responsive website design Pune, e-commerce website development, custom web development India, website developer Pune, business website design India, affordable web design Pune"
+        canonical="/services/web-dev"
+        schema={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "Website Design & Development",
+            "provider": { "@type": "Organization", "name": "Advait Digital", "url": "https://advaitdigital.co.in" },
+            "areaServed": "India",
+            "description": "Professional website design and development services in Pune — responsive, SEO-friendly, and custom-built.",
+            "url": "https://advaitdigital.co.in/services/web-dev",
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.9",
+              "reviewCount": "154"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://advaitdigital.co.in/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Website Design & Development",
+                "item": "https://advaitdigital.co.in/services/web-dev"
+              }
+            ]
+          }
+        ]}
+      />
       
       {/* High-Contrast Hero Banner */}
       <section className="bg-[#0c1b3d] text-white py-12 sm:py-16 md:py-20 relative overflow-hidden">

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import SEOHead from '../components/SEOHead';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, ArrowRight, CaretDown, CaretUp, Check, 
@@ -31,6 +32,68 @@ export default function RcsMessaging() {
 
   return (
     <div className="pt-24 space-y-12 sm:space-y-16 md:space-y-24 pb-12 sm:pb-16 md:pb-20 bg-brand-cream-light">
+      <SEOHead
+        title="RCS Messaging Service India — Rich Communication Services Business Messaging"
+        description="Advait Digital offers verified RCS business messaging in India. Upgrade from plain SMS to branded, interactive RCS messages with images, carousels, quick-reply buttons, and verified sender IDs."
+        keywords="RCS messaging India, rich communication services India, RCS business messaging, verified RCS sender India, RCS SMS upgrade, interactive business messaging India, RCS chatbot, branded messaging India, RCS marketing"
+        canonical="/services/rcs"
+        schema={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "RCS Business Messaging Service",
+            "provider": { "@type": "Organization", "name": "Advait Digital", "url": "https://advaitdigital.co.in" },
+            "areaServed": "India",
+            "description": "Verified RCS messaging campaigns with rich media, carousels, and branded sender profiles.",
+            "url": "https://advaitdigital.co.in/services/rcs",
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.8",
+              "reviewCount": "96"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What is RCS Business Messaging?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "RCS Business Messaging is an advanced messaging solution that allows businesses to enhance their communication with customers through interactive, rich media messages. It leverages the capabilities of RCS, an upgrade to traditional SMS, to provide a whole host of features such as branding, rich media elements, suggested replies, carousels, and more."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Does RCS fall back to SMS?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, an RCS message can be configured to fall back to SMS (also referred to as SMS failover) if a recipient’s device or carrier does not support the RCS protocol."
+                }
+              }
+            ]
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://advaitdigital.co.in/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "RCS Business Messaging",
+                "item": "https://advaitdigital.co.in/services/rcs"
+              }
+            ]
+          }
+        ]}
+      />
       
       {/* Hero Banner with High Contrast */}
       <section className="bg-[#0b152d] text-white py-12 sm:py-16 md:py-20 relative overflow-hidden">

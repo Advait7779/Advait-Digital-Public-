@@ -1,4 +1,5 @@
 import React from 'react';
+import SEOHead from '../components/SEOHead';
 import { 
   Briefcase, GraduationCap, Users, MapPin, Clock, 
   CheckCircle, Phone, Envelope
@@ -42,6 +43,30 @@ export default function Careers() {
 
   return (
     <div className="pt-24 space-y-12 sm:space-y-16 md:space-y-20 pb-12 sm:pb-16 md:pb-20 bg-[#fbfbf7]">
+      <SEOHead
+        title="Careers at Advait Digital — Jobs in Pune for Developers & Sales Executives"
+        description="Join Advait Digital's growing team in Pune. We are hiring Full Stack Developers and Sales Executives for our digital marketing and bulk messaging business in Hadapsar, Pune."
+        keywords="jobs at Advait Digital, careers Advait Digital Pune, Full Stack Developer job Pune, Sales Executive job Pune, Hadapsar jobs, digital marketing jobs Pune, tech jobs Pune, messaging company jobs"
+        canonical="/careers"
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://advaitdigital.co.in/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Careers",
+              "item": "https://advaitdigital.co.in/careers"
+            }
+          ]
+        }}
+      />
       {/* Hero Section */}
       <section className="bg-brand-charcoal text-white py-10 sm:py-12 md:py-16 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-orange/5 rounded-full blur-3xl pointer-events-none"></div>

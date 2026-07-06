@@ -1,4 +1,5 @@
 import React from 'react';
+import SEOHead from '../components/SEOHead';
 import { motion } from 'framer-motion';
 import { Phone, Envelope, MapPin, Clock, FacebookLogo, TwitterLogo, LinkedinLogo } from '@phosphor-icons/react';
 import DemoForm from '../components/DemoForm';
@@ -31,6 +32,30 @@ export default function Contact() {
 
   return (
     <div className="pt-24 space-y-12 sm:space-y-16 md:space-y-20 pb-12 sm:pb-16 md:pb-20">
+      <SEOHead
+        title="Contact Advait Digital — Bulk SMS & Digital Services Pune India"
+        description="Contact Advait Digital for bulk SMS, WhatsApp API, RCS messaging, voice call, and digital marketing services. Office at Amanora Chambers, Pune 411028. Call +91 8282982829."
+        keywords="contact Advait Digital, Advait Digital Pune contact, bulk SMS company contact, digital marketing Pune contact, Amanora Chambers Pune, SMS service Pune phone number, WhatsApp API provider contact"
+        canonical="/contact"
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://advaitdigital.co.in/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Contact Us",
+              "item": "https://advaitdigital.co.in/contact"
+            }
+          ]
+        }}
+      />
       {/* Hero Banner */}
       <section className="bg-brand-charcoal text-white py-10 sm:py-12 md:py-16 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-orange/5 rounded-full blur-3xl pointer-events-none"></div>

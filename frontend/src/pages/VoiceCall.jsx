@@ -1,4 +1,5 @@
 import React from 'react';
+import SEOHead from '../components/SEOHead';
 import { 
   PhoneCall, ArrowLeft, CheckCircle, CurrencyInr, Microphone, 
   Calendar, Globe, ChartLineUp, ShieldCheck, Users, ArrowRight,
@@ -152,6 +153,46 @@ export default function VoiceCall() {
 
   return (
     <div className="pt-24 space-y-12 sm:space-y-16 md:space-y-24 pb-12 sm:pb-16 md:pb-20 bg-brand-cream-light font-sans">
+      <SEOHead
+        title="Bulk Voice Call Service India — Automated IVR & Voice Broadcast"
+        description="Advait Digital offers bulk voice call and automated IVR services across India. Broadcast pre-recorded voice messages to thousands of contacts for marketing, election campaigns, and customer alerts."
+        keywords="bulk voice call India, automated voice call service, IVR service India, voice broadcast India, voice call marketing India, robocall India, automated calling service, voice OTP India, bulk voice message India, voice call Pune"
+        canonical="/services/voice-call"
+        schema={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "Bulk Voice Call Service",
+            "provider": { "@type": "Organization", "name": "Advait Digital", "url": "https://advaitdigital.co.in" },
+            "areaServed": "India",
+            "description": "Automated bulk voice call and IVR broadcasting for marketing, election campaigns, and customer notifications.",
+            "url": "https://advaitdigital.co.in/services/voice-call",
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.8",
+              "reviewCount": "128"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://advaitdigital.co.in/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Voice Call Services",
+                "item": "https://advaitdigital.co.in/services/voice-call"
+              }
+            ]
+          }
+        ]}
+      />
       
       {/* High-Contrast Rose-Crimson Hero Section */}
       <section className="bg-[#4c0b1a] text-white py-12 sm:py-16 md:py-20 relative overflow-hidden">

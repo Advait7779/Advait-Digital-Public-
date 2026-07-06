@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import SEOHead from '../components/SEOHead';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   EnvelopeOpen, ArrowLeft, CurrencyInr, ArrowRight, ShieldCheck,
@@ -111,6 +112,46 @@ export default function SmsMarketing() {
 
   return (
     <div className="pt-24 space-y-12 sm:space-y-16 md:space-y-24 pb-12 sm:pb-16 md:pb-20 bg-brand-cream-light font-sans">
+      <SEOHead
+        title="Bulk SMS Marketing Service India — Promotional & Transactional SMS"
+        description="Advait Digital offers high-delivery bulk SMS marketing services in India. Send promotional, transactional, and OTP SMS to thousands instantly. DLT compliant. Serve Pune, Mumbai & all India."
+        keywords="bulk SMS service India, SMS marketing India, promotional SMS India, transactional SMS service, bulk SMS Pune, OTP SMS service, DLT compliant SMS, SMS campaign India, affordable bulk SMS, mass SMS sender India"
+        canonical="/services/sms-marketing"
+        schema={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "Bulk SMS Marketing Service",
+            "provider": { "@type": "Organization", "name": "Advait Digital", "url": "https://advaitdigital.co.in" },
+            "areaServed": "India",
+            "description": "High-delivery bulk SMS marketing — promotional, transactional, and OTP SMS campaigns with DLT compliance across India.",
+            "url": "https://advaitdigital.co.in/services/sms-marketing",
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.9",
+              "reviewCount": "184"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://advaitdigital.co.in/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "SMS Marketing Service",
+                "item": "https://advaitdigital.co.in/services/sms-marketing"
+              }
+            ]
+          }
+        ]}
+      />
       
       {/* High-Contrast Crimson Hero Section */}
       <section className="bg-[#3b0b11] text-white py-12 sm:py-16 md:py-20 relative overflow-hidden">
