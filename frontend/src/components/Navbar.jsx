@@ -111,7 +111,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'glass-nav shadow-md' : 'bg-transparent'}`}>
+    <nav className={`fixed top-0 left-0 w-full z-[1000] transition-all duration-300 ${isScrolled ? 'glass-nav shadow-md' : 'bg-transparent'}`}>
       <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-300 ${isScrolled ? 'h-20' : 'h-24'}`}>
         <div className="flex items-center justify-between h-full">
           {/* Logo */}
@@ -247,7 +247,7 @@ export default function Navbar() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 lg:hidden"
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[1001] lg:hidden"
             />
 
             {/* Right-Side Sliding Panel */}
@@ -256,11 +256,11 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-              className="fixed inset-y-0 right-0 z-50 w-[85%] max-w-[340px] bg-white shadow-2xl flex flex-col justify-between lg:hidden border-l border-brand-charcoal/10"
+              className="fixed inset-y-0 right-0 z-[1002] w-[85%] max-w-[340px] bg-white shadow-2xl flex flex-col justify-between lg:hidden border-l border-brand-charcoal/10"
             >
-              {/* Drawer Header */}
-              <div>
-                <div className="flex items-center justify-between p-5 border-b border-gray-100">
+              {/* Drawer Header & Links Wrapper */}
+              <div className="w-full flex flex-col">
+                <div className="flex items-center justify-between p-5 border-b border-gray-100 w-full bg-white">
                   <div className="flex items-center gap-2.5">
                     <img
                       src="/favicon.png"
@@ -283,9 +283,9 @@ export default function Navbar() {
                 </div>
 
                 {/* Navigation Links Accordion List */}
-                <div className="p-4 space-y-2 overflow-y-auto max-h-[calc(100vh-220px)]">
+                <div className="p-4 space-y-2 overflow-y-auto max-h-[calc(100vh-220px)] w-full bg-white">
                   {/* Home */}
-                  <div className="rounded-xl overflow-hidden bg-gray-50/70 border border-gray-100">
+                  <div className="rounded-xl overflow-hidden bg-gray-50/70 border border-gray-100 w-full">
                     <button
                       onClick={() => setHomeAccordionOpen(prev => !prev)}
                       className="w-full px-4 py-3 flex items-center justify-between font-bold text-sm text-emerald-600 hover:bg-gray-100 transition-colors cursor-pointer"
@@ -297,14 +297,14 @@ export default function Navbar() {
                       />
                     </button>
                     {homeAccordionOpen && (
-                      <div className="px-4 pb-3 pt-1 border-t border-gray-100 bg-white space-y-2 text-xs font-semibold text-brand-charcoal-light">
-                        <Link to="/" className="block py-1.5 hover:text-brand-orange">Main Landing Page</Link>
+                      <div className="px-4 pb-3 pt-1 border-t border-gray-100 bg-white space-y-2 text-xs font-semibold text-brand-charcoal-light w-full">
+                        <Link to="/" className="block py-1.5 hover:text-brand-orange w-full">Main Landing Page</Link>
                       </div>
                     )}
                   </div>
 
                   {/* Services Accordion */}
-                  <div className="rounded-xl overflow-hidden bg-gray-50/70 border border-gray-100">
+                  <div className="rounded-xl overflow-hidden bg-gray-50/70 border border-gray-100 w-full">
                     <button
                       onClick={toggleDropdown}
                       className="w-full px-4 py-3 flex items-center justify-between font-bold text-sm text-brand-charcoal hover:bg-gray-100 transition-colors cursor-pointer"
@@ -322,14 +322,14 @@ export default function Navbar() {
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
-                          className="bg-white border-t border-gray-100 px-3 py-2 space-y-1"
+                          className="bg-white border-t border-gray-100 px-3 py-2 space-y-1 w-full"
                         >
                           {serviceLinks.map((srv, idx) => (
                             <Link
                               key={idx}
                               to={srv.path}
                               onClick={() => setIsOpen(false)}
-                              className="flex items-center justify-between p-2 rounded-lg text-xs font-semibold text-brand-charcoal hover:text-brand-orange hover:bg-brand-cream/30 transition-colors"
+                              className="flex items-center justify-between p-2 rounded-lg text-xs font-semibold text-brand-charcoal hover:text-brand-orange hover:bg-brand-cream/30 transition-colors w-full"
                             >
                               <span className="truncate">{srv.name}</span>
                               <ArrowRight size={12} className="text-brand-charcoal-light/40 shrink-0" />
@@ -344,7 +344,7 @@ export default function Navbar() {
                   <Link
                     to="/about"
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50/70 border border-gray-100 font-bold text-sm text-brand-charcoal hover:bg-gray-100 transition-colors"
+                    className="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50/70 border border-gray-100 font-bold text-sm text-brand-charcoal hover:bg-gray-100 transition-colors w-full"
                   >
                     <span>About Us</span>
                     <CaretDown size={16} className="text-gray-400 transform -rotate-90" />
@@ -354,7 +354,7 @@ export default function Navbar() {
                   <Link
                     to="/contact"
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50/70 border border-gray-100 font-bold text-sm text-brand-charcoal hover:bg-gray-100 transition-colors"
+                    className="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50/70 border border-gray-100 font-bold text-sm text-brand-charcoal hover:bg-gray-100 transition-colors w-full"
                   >
                     <span>Contact</span>
                     <CaretDown size={16} className="text-gray-400 transform -rotate-90" />
@@ -363,7 +363,7 @@ export default function Navbar() {
               </div>
 
               {/* Drawer Footer Buttons (Call for Demo & Contact Us - Matching Screenshot 2) */}
-              <div className="p-5 border-t border-gray-100 space-y-3 bg-white">
+              <div className="p-5 border-t border-gray-100 space-y-3 bg-white w-full">
                 <button
                   onClick={handleOpenDemoModal}
                   className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm py-3 rounded-full flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 transition-all duration-200 cursor-pointer"
