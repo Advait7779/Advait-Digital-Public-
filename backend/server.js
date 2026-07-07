@@ -6,7 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { recordVisit, getStats } from './analytics.js';
-import { query } from './db.js';
+import { query, prisma } from './db.js';
 
 dotenv.config();
 
@@ -248,13 +248,12 @@ function generateHtmlFromConfig(config) {
  */
 async function buildThankYouEmail({ name, phone, service }) {
   try {
-    const result = await query(
-      `SELECT subject, body_html FROM email_templates WHERE key = $1`,
-      ['customer_thankyou']
-    );
-    if (!result.rows.length) return null;
+    const template = await prisma.emailTemplate.findUnique({
+      where: { key: 'customer_thankyou' }
+    });
+    if (!template) return null;
 
-    let rawBody = result.rows[0].body_html;
+    let rawBody = template.bodyHtml;
     let attachments = [];
 
     if (rawBody.trim().startsWith('{')) {
@@ -279,7 +278,7 @@ async function buildThankYouEmail({ name, phone, service }) {
         .replace(/\{\{service\}\}/g, service);
 
     return {
-      subject: replace(result.rows[0].subject),
+      subject: replace(template.subject),
       html: replace(rawBody),
       attachments
     };
@@ -330,11 +329,17 @@ app.post('/api/submit-lead', (req, res) => {
 
     // 1. Save lead to PostgreSQL
     try {
-      await query(
-        `INSERT INTO leads (name, phone, email, service, message, source_form, ip_address)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [name, phone, email || null, service, message || null, sourceForm, visitorIp || null]
-      );
+      await prisma.lead.create({
+        data: {
+          name,
+          phone,
+          email: email || null,
+          service,
+          message: message || null,
+          sourceForm,
+          ipAddress: visitorIp || null,
+        }
+      });
       console.log(`✅ [DB] Lead saved for ${name} (${phone})`);
     } catch (dbErr) {
       console.error('❌ [DB] Failed to save lead:', dbErr.message);
@@ -525,18 +530,26 @@ app.post('/api/admin/login', (req, res) => {
  */
 app.get('/api/admin/stats', requireAdmin, async (req, res) => {
   try {
-    const result = await query(`
+    const result = await prisma.$queryRaw`
       SELECT
-        COUNT(*)                                          AS total,
-        COUNT(*) FILTER (WHERE status = 'New')           AS new_leads,
-        COUNT(*) FILTER (WHERE status = 'Contacted')     AS contacted,
-        COUNT(*) FILTER (WHERE status = 'Converted')     AS converted,
-        COUNT(*) FILTER (WHERE status = 'Closed')        AS closed,
-        COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') AS this_week,
-        COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '1 day')  AS today
+        COUNT(*)::int                                     AS total,
+        COUNT(*) FILTER (WHERE status = 'New')::int       AS new_leads,
+        COUNT(*) FILTER (WHERE status = 'Contacted')::int AS contacted,
+        COUNT(*) FILTER (WHERE status = 'Converted')::int AS converted,
+        COUNT(*) FILTER (WHERE status = 'Closed')::int    AS closed,
+        COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::int AS this_week,
+        COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '1 day')::int  AS today
       FROM leads
-    `);
-    res.json(result.rows[0]);
+    `;
+    res.json(result[0] || {
+      total: 0,
+      new_leads: 0,
+      contacted: 0,
+      converted: 0,
+      closed: 0,
+      this_week: 0,
+      today: 0
+    });
   } catch (err) {
     console.error('❌ [Admin] stats error:', err.message);
     res.status(500).json({ error: 'Could not fetch stats' });
@@ -555,44 +568,52 @@ app.get('/api/admin/leads', requireAdmin, async (req, res) => {
     const search = req.query.search || '';
     const offset = (page - 1) * limit;
 
-    let conditions = [];
-    let params = [];
-    let idx = 1;
-
+    const where = {};
     if (status) {
-      conditions.push(`status = $${idx++}`);
-      params.push(status);
+      where.status = status;
     }
     if (search) {
-      conditions.push(`(name ILIKE $${idx} OR phone ILIKE $${idx} OR email ILIKE $${idx})`);
-      params.push(`%${search}%`);
-      idx++;
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { phone: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ];
     }
 
-    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const total = await prisma.lead.count({ where });
 
-    const countResult = await query(
-      `SELECT COUNT(*) FROM leads ${where}`,
-      params
-    );
-    const total = parseInt(countResult.rows[0].count, 10);
+    const leads = await prisma.lead.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        email: true,
+        service: true,
+        sourceForm: true,
+        status: true,
+        message: true,
+        createdAt: true,
+      },
+      orderBy: { id: 'desc' },
+      take: limit,
+      skip: offset,
+    });
 
-    const dataResult = await query(
-      `SELECT id, name, phone, email, service, source_form, status, message, created_at
-       FROM leads ${where}
-       ORDER BY id DESC
-       LIMIT $${idx} OFFSET $${idx + 1}`,
-      [...params, limit, offset]
-    );
+    const mappedLeads = leads.map(l => ({
+      ...l,
+      source_form: l.sourceForm,
+      created_at: l.createdAt
+    }));
 
     res.json({
-      leads: dataResult.rows,
+      leads: mappedLeads,
       total,
       page,
       pages: Math.ceil(total / limit),
     });
   } catch (err) {
-    console.error('❌ [Admin] leads list error:', err.message);
+    console.error('❌ [Admin] fetch leads error:', err.message);
     res.status(500).json({ error: 'Could not fetch leads' });
   }
 });
@@ -609,10 +630,10 @@ app.patch('/api/admin/leads/:id/status', requireAdmin, async (req, res) => {
     return res.status(400).json({ error: 'Invalid status value' });
   }
   try {
-    await query(
-      `UPDATE leads SET status = $1, updated_at = NOW() WHERE id = $2`,
-      [status, id]
-    );
+    await prisma.lead.update({
+      where: { id: parseInt(id, 10) },
+      data: { status }
+    });
     res.json({ success: true });
   } catch (err) {
     console.error('❌ [Admin] status update error:', err.message);
@@ -628,10 +649,10 @@ app.patch('/api/admin/leads/:id/notes', requireAdmin, async (req, res) => {
   const { id } = req.params;
   const { notes } = req.body;
   try {
-    await query(
-      `UPDATE leads SET notes = $1, updated_at = NOW() WHERE id = $2`,
-      [notes || null, id]
-    );
+    await prisma.lead.update({
+      where: { id: parseInt(id, 10) },
+      data: { notes: notes || null }
+    });
     res.json({ success: true });
   } catch (err) {
     console.error('❌ [Admin] notes update error:', err.message);
@@ -646,7 +667,9 @@ app.patch('/api/admin/leads/:id/notes', requireAdmin, async (req, res) => {
 app.delete('/api/admin/leads/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   try {
-    await query(`DELETE FROM leads WHERE id = $1`, [id]);
+    await prisma.lead.delete({
+      where: { id: parseInt(id, 10) }
+    });
     res.json({ success: true });
   } catch (err) {
     console.error('❌ [Admin] delete error:', err.message);
@@ -662,31 +685,29 @@ app.get('/api/admin/leads/export', requireAdmin, async (req, res) => {
   try {
     const { status } = req.query;
     console.log(`📥 [Backend] Export requested with status filter: "${status || 'All'}"`);
-    let result;
+    
+    const where = {};
     if (status && status !== 'All') {
-      result = await query(
-        `SELECT id, name, phone, email, service, source_form, status, message, created_at
-         FROM leads WHERE status = $1 ORDER BY id DESC`,
-        [status]
-      );
-    } else {
-      result = await query(
-        `SELECT id, name, phone, email, service, source_form, status, message, created_at
-         FROM leads ORDER BY id DESC`
-      );
+      where.status = status;
     }
+
+    const leads = await prisma.lead.findMany({
+      where,
+      orderBy: { id: 'desc' }
+    });
+
     const header = 'ID,Name,Phone,Email,Service,Source Form,Status,Message,Date\n';
-    const rows = result.rows.map(r =>
+    const rows = leads.map(r =>
       [
         r.id,
         `"${(r.name || '').replace(/"/g, '""')}"`,
         r.phone,
         r.email || '',
         `"${(r.service || '').replace(/"/g, '""')}"`,
-        `"${(r.source_form || '').replace(/"/g, '""')}"`,
+        `"${(r.sourceForm || '').replace(/"/g, '""')}"`,
         r.status,
         `"${(r.message || '').replace(/"/g, '""')}"`,
-        new Date(r.created_at).toISOString()
+        new Date(r.createdAt).toISOString()
       ].join(',')
     ).join('\n');
 
@@ -705,12 +726,16 @@ app.get('/api/admin/leads/export', requireAdmin, async (req, res) => {
  */
 app.get('/api/admin/template', requireAdmin, async (req, res) => {
   try {
-    const result = await query(
-      `SELECT key, subject, body_html, updated_at FROM email_templates WHERE key = $1`,
-      ['customer_thankyou']
-    );
-    if (!result.rows.length) return res.status(404).json({ error: 'Template not found' });
-    res.json(result.rows[0]);
+    const template = await prisma.emailTemplate.findUnique({
+      where: { key: 'customer_thankyou' }
+    });
+    if (!template) return res.status(404).json({ error: 'Template not found' });
+    res.json({
+      key: template.key,
+      subject: template.subject,
+      body_html: template.bodyHtml,
+      updated_at: template.updatedAt
+    });
   } catch (err) {
     console.error('❌ [Admin] template fetch error:', err.message);
     res.status(500).json({ error: 'Could not fetch template' });
@@ -727,10 +752,13 @@ app.put('/api/admin/template', requireAdmin, async (req, res) => {
     return res.status(400).json({ error: 'Subject and body_html are required' });
   }
   try {
-    await query(
-      `UPDATE email_templates SET subject = $1, body_html = $2, updated_at = NOW() WHERE key = $3`,
-      [subject, body_html, 'customer_thankyou']
-    );
+    await prisma.emailTemplate.update({
+      where: { key: 'customer_thankyou' },
+      data: {
+        subject,
+        bodyHtml: body_html
+      }
+    });
     res.json({ success: true });
   } catch (err) {
     console.error('❌ [Admin] template update error:', err.message);

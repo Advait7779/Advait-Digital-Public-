@@ -1,0 +1,35 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Lead {
+  id         Int      @id @default(autoincrement())
+  name       String
+  phone      String
+  email      String?
+  service    String?
+  message    String?
+  sourceForm String   @default("Website Form") @map("source_form")
+  status     String   @default("New")
+  ipAddress  String?  @map("ip_address")
+  notes      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("leads")
+}
+
+model EmailTemplate {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  subject   String
+  bodyHtml  String   @map("body_html")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("email_templates")
+}
