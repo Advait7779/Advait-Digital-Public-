@@ -349,6 +349,15 @@ app.post('/api/submit-lead', (req, res) => {
           ? path.join(__dirname, '../frontend/public/favicon.png')
           : path.join(__dirname, 'favicon.png');
 
+        const attachments = [];
+        if (fs.existsSync(logoPath)) {
+          attachments.push({
+            filename: 'logo.png',
+            path: logoPath,
+            cid: 'advaitlogo'
+          });
+        }
+
         const userEmail = process.env.SMTP_USER || 'support@advaitteleservices.com';
         const rawFrom = (process.env.SMTP_FROM || '').trim();
         let smtpFrom = `"Advait Digital Website" <${userEmail}>`;
@@ -363,13 +372,7 @@ app.post('/api/submit-lead', (req, res) => {
           from: smtpFrom,
           to: process.env.NOTIFY_EMAIL || 'sales@advaitteleservices.com',
           subject: `🚨 New Lead: ${name} (${service})`,
-          attachments: [
-            {
-              filename: 'logo.png',
-              path: logoPath,
-              cid: 'advaitlogo'
-            }
-          ],
+          attachments,
           html: `
             <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <!-- Header with Embedded Brand Logo -->
