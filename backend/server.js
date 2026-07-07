@@ -6,6 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { recordVisit, getStats } from './analytics.js';
+import { query } from './db.js';
 
 dotenv.config();
 
@@ -42,7 +43,7 @@ function createSmtpTransporter() {
     return null;
   }
 
-  // Remove any spaces from Google App Password (e.g. "rtvj luxu szvw kmtv" -> "rtvjluxuszvwkmtv")
+  // Remove any spaces from Google App Password
   const cleanPass = SMTP_PASS.replace(/\s+/g, '');
 
   return nodemailer.createTransport({
@@ -111,9 +112,49 @@ async function sendWabaAlert({ name, phone, email, service, sourceForm }) {
 }
 
 /**
- * Main API Endpoint: /api/submit-lead
- * Instant response (under 50ms) with background email and WABA processing
+ * Fetch the Thank You email template from DB and replace placeholders
  */
+async function buildThankYouEmail({ name, phone, service }) {
+  try {
+    const result = await query(
+      `SELECT subject, body_html FROM email_templates WHERE key = $1`,
+      ['customer_thankyou']
+    );
+    if (!result.rows.length) return null;
+
+    const replace = (str) =>
+      str
+        .replace(/\{\{name\}\}/g, name)
+        .replace(/\{\{phone\}\}/g, phone)
+        .replace(/\{\{service\}\}/g, service);
+
+    return {
+      subject: replace(result.rows[0].subject),
+      html: replace(result.rows[0].body_html),
+    };
+  } catch (err) {
+    console.error('❌ [Backend] Could not fetch email template:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Admin auth middleware — validates Bearer token from ADMIN_SECRET env
+ */
+function requireAdmin(req, res, next) {
+  const secret = process.env.ADMIN_SECRET || '';
+  const auth = req.headers.authorization || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+
+  if (!secret || token !== secret) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+}
+
+// ============================================================
+// MAIN API: Submit Lead
+// ============================================================
 app.post('/api/submit-lead', (req, res) => {
   const { name, phone, email, service, message, sourceForm = 'Website Form' } = req.body;
 
@@ -121,18 +162,36 @@ app.post('/api/submit-lead', (req, res) => {
     return res.status(400).json({ error: 'Name, phone, and service are required fields.' });
   }
 
+  const visitorIp =
+    req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+    req.socket?.remoteAddress || '';
+
   console.log(`⚡ [Backend] Instant lead received from ${name} (${phone}) - Service: ${service}`);
 
-  // 1. Send Instant HTTP Success Response to Website (Zero Delay / Under 50ms)
+  // Instant HTTP Success Response (Zero Delay)
   res.json({
     success: true,
     message: 'Enquiry submitted successfully!'
   });
 
-  // 2. Perform Email & WhatsApp Dispatch in the Background (Non-blocking)
+  // Background processing: DB save + emails + WABA
   setImmediate(async () => {
-    // A. Dispatch Email via Custom SMTP with Brand Logo
+
+    // 1. Save lead to PostgreSQL
+    try {
+      await query(
+        `INSERT INTO leads (name, phone, email, service, message, source_form, ip_address)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [name, phone, email || null, service, message || null, sourceForm, visitorIp || null]
+      );
+      console.log(`✅ [DB] Lead saved for ${name} (${phone})`);
+    } catch (dbErr) {
+      console.error('❌ [DB] Failed to save lead:', dbErr.message);
+    }
+
     const transporter = createSmtpTransporter();
+
+    // 2. Send admin notification email (existing behaviour)
     if (transporter) {
       try {
         const logoPath = fs.existsSync(path.join(__dirname, '../frontend/public/favicon.png'))
@@ -149,7 +208,7 @@ app.post('/api/submit-lead', (req, res) => {
           smtpFrom = `"Advait Digital Website" <${rawFrom}>`;
         }
 
-        const mailOptions = {
+        const adminMailOptions = {
           from: smtpFrom,
           to: process.env.NOTIFY_EMAIL || 'sales@advaitteleservices.com',
           subject: `🚨 New Lead: ${name} (${service})`,
@@ -209,29 +268,51 @@ app.post('/api/submit-lead', (req, res) => {
           `
         };
 
-        await transporter.sendMail(mailOptions);
-        console.log(`✅ [Backend SMTP] Background email notification with logo sent to ${mailOptions.to}`);
+        await transporter.sendMail(adminMailOptions);
+        console.log(`✅ [Backend SMTP] Admin notification email sent`);
       } catch (mailErr) {
-        console.error('❌ [Backend SMTP] Error sending email:', mailErr.message);
+        console.error('❌ [Backend SMTP] Admin email error:', mailErr.message);
+      }
+
+      // 3. Send Thank You email to customer (only if they provided an email)
+      const customerEmail = (email || '').trim();
+      if (customerEmail && /\S+@\S+\.\S+/.test(customerEmail)) {
+        try {
+          const tmpl = await buildThankYouEmail({ name, phone, service });
+          if (tmpl) {
+            const userEmail = process.env.SMTP_USER || 'sales@advaitteleservices.com';
+            const rawFrom = (process.env.SMTP_FROM || '').trim();
+            let smtpFrom = `"Advait Digital" <${userEmail}>`;
+            if (rawFrom.includes('<') && rawFrom.includes('>')) smtpFrom = rawFrom;
+            else if (rawFrom.includes('@')) smtpFrom = `"Advait Digital" <${rawFrom}>`;
+
+            await transporter.sendMail({
+              from: smtpFrom,
+              to: customerEmail,
+              subject: tmpl.subject,
+              html: tmpl.html,
+            });
+            console.log(`✅ [Backend SMTP] Thank You email sent to ${customerEmail}`);
+          }
+        } catch (tyErr) {
+          console.error('❌ [Backend SMTP] Thank You email error:', tyErr.message);
+        }
       }
     }
 
-    // B. Dispatch WABA Alert
+    // 4. Dispatch WABA Alert
     await sendWabaAlert({ name, phone, email, service, sourceForm });
   });
 });
 
-/**
- * Analytics: Record a page visit
- * POST /api/analytics/visit
- * Body: { page, referrer, utm_source, utm_medium, utm_campaign, device, browser, sessionId }
- */
+// ============================================================
+// ANALYTICS
+// ============================================================
 app.post('/api/analytics/visit', (req, res) => {
   try {
     const visitorIp =
       req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-      req.socket?.remoteAddress ||
-      '';
+      req.socket?.remoteAddress || '';
 
     const count = recordVisit({ ...req.body, ip: visitorIp });
     res.json({ success: true, totalCount: count });
@@ -241,14 +322,9 @@ app.post('/api/analytics/visit', (req, res) => {
   }
 });
 
-/**
- * Analytics: Public stats (safe to expose — no IP/session data)
- * GET /api/analytics/public-stats
- */
 app.get('/api/analytics/public-stats', (req, res) => {
   try {
     const stats = getStats();
-    // Only return non-sensitive aggregate fields for the public badge
     res.json({
       totalCount: stats.totalCount,
       todayCount: stats.todayCount,
@@ -261,6 +337,231 @@ app.get('/api/analytics/public-stats', (req, res) => {
   } catch (err) {
     console.error('❌ [Analytics] stats error:', err.message);
     res.status(500).json({ error: 'Stats unavailable' });
+  }
+});
+
+// ============================================================
+// ADMIN API — all routes protected by ADMIN_SECRET Bearer token
+// ============================================================
+
+/**
+ * POST /api/admin/login
+ * Returns success if the password matches ADMIN_SECRET
+ */
+app.post('/api/admin/login', (req, res) => {
+  const { password } = req.body;
+  const secret = process.env.ADMIN_SECRET || '';
+  if (!secret || password !== secret) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  res.json({ success: true, token: secret });
+});
+
+/**
+ * GET /api/admin/stats
+ * Dashboard stat counts by status
+ */
+app.get('/api/admin/stats', requireAdmin, async (req, res) => {
+  try {
+    const result = await query(`
+      SELECT
+        COUNT(*)                                          AS total,
+        COUNT(*) FILTER (WHERE status = 'New')           AS new_leads,
+        COUNT(*) FILTER (WHERE status = 'Contacted')     AS contacted,
+        COUNT(*) FILTER (WHERE status = 'Converted')     AS converted,
+        COUNT(*) FILTER (WHERE status = 'Closed')        AS closed,
+        COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') AS this_week,
+        COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '1 day')  AS today
+      FROM leads
+    `);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('❌ [Admin] stats error:', err.message);
+    res.status(500).json({ error: 'Could not fetch stats' });
+  }
+});
+
+/**
+ * GET /api/admin/leads?page=1&limit=20&status=&search=
+ * Paginated leads list
+ */
+app.get('/api/admin/leads', requireAdmin, async (req, res) => {
+  try {
+    const page   = Math.max(1, parseInt(req.query.page  || '1', 10));
+    const limit  = Math.min(100, parseInt(req.query.limit || '20', 10));
+    const status = req.query.status || '';
+    const search = req.query.search || '';
+    const offset = (page - 1) * limit;
+
+    let conditions = [];
+    let params = [];
+    let idx = 1;
+
+    if (status) {
+      conditions.push(`status = $${idx++}`);
+      params.push(status);
+    }
+    if (search) {
+      conditions.push(`(name ILIKE $${idx} OR phone ILIKE $${idx} OR email ILIKE $${idx})`);
+      params.push(`%${search}%`);
+      idx++;
+    }
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const countResult = await query(
+      `SELECT COUNT(*) FROM leads ${where}`,
+      params
+    );
+    const total = parseInt(countResult.rows[0].count, 10);
+
+    const dataResult = await query(
+      `SELECT id, name, phone, email, service, source_form, status, message, created_at
+       FROM leads ${where}
+       ORDER BY created_at DESC
+       LIMIT $${idx} OFFSET $${idx + 1}`,
+      [...params, limit, offset]
+    );
+
+    res.json({
+      leads: dataResult.rows,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    });
+  } catch (err) {
+    console.error('❌ [Admin] leads list error:', err.message);
+    res.status(500).json({ error: 'Could not fetch leads' });
+  }
+});
+
+/**
+ * PATCH /api/admin/leads/:id/status
+ * Update lead status
+ */
+app.patch('/api/admin/leads/:id/status', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const allowed = ['New', 'Contacted', 'Converted', 'Closed'];
+  if (!allowed.includes(status)) {
+    return res.status(400).json({ error: 'Invalid status value' });
+  }
+  try {
+    await query(
+      `UPDATE leads SET status = $1, updated_at = NOW() WHERE id = $2`,
+      [status, id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ [Admin] status update error:', err.message);
+    res.status(500).json({ error: 'Could not update status' });
+  }
+});
+
+/**
+ * PATCH /api/admin/leads/:id/notes
+ * Update lead notes
+ */
+app.patch('/api/admin/leads/:id/notes', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { notes } = req.body;
+  try {
+    await query(
+      `UPDATE leads SET notes = $1, updated_at = NOW() WHERE id = $2`,
+      [notes || null, id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ [Admin] notes update error:', err.message);
+    res.status(500).json({ error: 'Could not update notes' });
+  }
+});
+
+/**
+ * DELETE /api/admin/leads/:id
+ * Delete a lead
+ */
+app.delete('/api/admin/leads/:id', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await query(`DELETE FROM leads WHERE id = $1`, [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ [Admin] delete error:', err.message);
+    res.status(500).json({ error: 'Could not delete lead' });
+  }
+});
+
+/**
+ * GET /api/admin/leads/export
+ * CSV export of all leads
+ */
+app.get('/api/admin/leads/export', requireAdmin, async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT id, name, phone, email, service, source_form, status, message, created_at
+       FROM leads ORDER BY created_at DESC`
+    );
+    const header = 'ID,Name,Phone,Email,Service,Source Form,Status,Message,Date\n';
+    const rows = result.rows.map(r =>
+      [
+        r.id,
+        `"${(r.name || '').replace(/"/g, '""')}"`,
+        r.phone,
+        r.email || '',
+        `"${(r.service || '').replace(/"/g, '""')}"`,
+        `"${(r.source_form || '').replace(/"/g, '""')}"`,
+        r.status,
+        `"${(r.message || '').replace(/"/g, '""')}"`,
+        new Date(r.created_at).toISOString()
+      ].join(',')
+    ).join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="advait_leads.csv"');
+    res.send(header + rows);
+  } catch (err) {
+    console.error('❌ [Admin] export error:', err.message);
+    res.status(500).json({ error: 'Could not export leads' });
+  }
+});
+
+/**
+ * GET /api/admin/template
+ * Get the Thank You email template
+ */
+app.get('/api/admin/template', requireAdmin, async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT key, subject, body_html, updated_at FROM email_templates WHERE key = $1`,
+      ['customer_thankyou']
+    );
+    if (!result.rows.length) return res.status(404).json({ error: 'Template not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('❌ [Admin] template fetch error:', err.message);
+    res.status(500).json({ error: 'Could not fetch template' });
+  }
+});
+
+/**
+ * PUT /api/admin/template
+ * Update the Thank You email template
+ */
+app.put('/api/admin/template', requireAdmin, async (req, res) => {
+  const { subject, body_html } = req.body;
+  if (!subject || !body_html) {
+    return res.status(400).json({ error: 'Subject and body_html are required' });
+  }
+  try {
+    await query(
+      `UPDATE email_templates SET subject = $1, body_html = $2, updated_at = NOW() WHERE key = $3`,
+      [subject, body_html, 'customer_thankyou']
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ [Admin] template update error:', err.message);
+    res.status(500).json({ error: 'Could not update template' });
   }
 });
 
