@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { getApiBaseUrl } from '../services/api.js';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+const API_BASE = getApiBaseUrl();
 
 const STATUS_COLORS = {
   New:       { bg: 'bg-blue-50',   text: 'text-blue-700',   dot: 'bg-blue-500',   border: 'border-blue-200'    },

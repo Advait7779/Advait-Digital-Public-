@@ -9,7 +9,7 @@ const LOCAL_DEV_HOSTS = new Set([
 ]);
 
 export function getApiBaseUrl() {
-  const envApiUrl = import.meta.env.VITE_API_URL?.trim();
+  const envApiUrl = import.meta.env.VITE_API_URL?.trim() || import.meta.env.VITE_API_BASE?.trim();
   if (envApiUrl) {
     return envApiUrl.replace(/\/+$/, '');
   }
