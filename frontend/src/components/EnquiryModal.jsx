@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle, Spinner, CaretDown, PaperPlaneTilt } from '@phosphor-icons/react';
 import { sendWhatsAppLeadAlert } from '../services/whatsappService';

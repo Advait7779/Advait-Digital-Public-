@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChatTeardropText, Megaphone, Globe, WhatsappLogo, 
   TrendUp, EnvelopeOpen, PhoneCall, List, X, CaretDown,
-  AppWindow, Phone, ArrowRight, CheckCircle
+  AppWindow, Phone, ArrowRight
 } from '@phosphor-icons/react';
 
 export default function Navbar() {

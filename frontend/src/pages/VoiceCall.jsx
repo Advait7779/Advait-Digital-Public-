@@ -1,9 +1,8 @@
-import React from 'react';
 import SEOHead from '../components/SEOHead';
 import { 
-  PhoneCall, ArrowLeft, CheckCircle, CurrencyInr, Microphone, 
-  Calendar, Globe, ChartLineUp, ShieldCheck, Users, ArrowRight,
-  Buildings, Airplane, Storefront, Briefcase, GraduationCap, Tag
+  ArrowLeft, CheckCircle, CurrencyInr, Microphone, 
+  Calendar, Globe, ChartLineUp, ShieldCheck, Users,
+  Buildings, Airplane, Storefront, Briefcase
 } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 

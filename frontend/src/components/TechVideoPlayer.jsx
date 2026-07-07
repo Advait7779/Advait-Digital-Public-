@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Play, SpeakerSimpleHigh, SpeakerSimpleSlash, Globe, LockKey, ArrowClockwise } from '@phosphor-icons/react';
+import { Play, SpeakerSimpleHigh, SpeakerSimpleSlash, LockKey, ArrowClockwise } from '@phosphor-icons/react';
 
-export default function TechVideoPlayer({ src, title = "Advait Digital Portal", className = "", variant = "browser" }) {
+export default function TechVideoPlayer({ src, title = "Advait Digital Portal", className = "" }) {
   const videoRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
   const [isMuted, setIsMuted] = useState(true);

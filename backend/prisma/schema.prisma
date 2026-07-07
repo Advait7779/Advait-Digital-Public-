@@ -19,8 +19,11 @@ model Lead {
   ipAddress  String?  @map("ip_address")
   notes      String?
   createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
 
+  @@index([status], map: "idx_leads_status")
+  @@index([createdAt(sort: Desc)], map: "idx_leads_created_at")
+  @@index([phone], map: "idx_leads_phone")
   @@map("leads")
 }
 
@@ -29,7 +32,7 @@ model EmailTemplate {
   key       String   @unique
   subject   String
   bodyHtml  String   @map("body_html")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("email_templates")
 }

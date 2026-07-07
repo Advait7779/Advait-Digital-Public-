@@ -1,10 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import SEOHead from '../components/SEOHead';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, ArrowRight, CaretDown, CaretUp, Check, 
-  ChartLineUp, DeviceMobile, ShieldCheck, ChatCircleText, Storefront 
-} from '@phosphor-icons/react';
+import { ArrowLeft, ArrowRight, CaretDown, CaretUp } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 
 // Import official RCS service images

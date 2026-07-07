@@ -1,13 +1,15 @@
-import './prisma-bootstrap.js';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { recordVisit, getStats } from './analytics.js';
-import { query, prisma } from './db.js';
+import { prisma } from './db.js';
 
 dotenv.config();
 
@@ -17,10 +19,157 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS and JSON parsing
-app.use(cors({ origin: '*' }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.set('trust proxy', 1);
+
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://advaitdigital.co.in',
+  'https://www.advaitdigital.co.in',
+  'http://localhost:5174',
+  'http://127.0.0.1:5174',
+];
+const allowedOrigins = (process.env.CORS_ORIGINS || DEFAULT_ALLOWED_ORIGINS.join(','))
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+}));
+app.disable('x-powered-by');
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(null, false);
+  },
+}));
+app.use(express.json({ limit: '32kb' }));
+app.use(express.urlencoded({ extended: true, limit: '32kb' }));
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 600,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const leadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many enquiry attempts. Please try again later.' },
+});
+const adminLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Please try again later.' },
+});
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/api/', apiLimiter);
+
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function normalizeText(value = '', maxLength = 1000) {
+  return String(value)
+    .replace(/[\u0000-\u001F\u007F]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLength);
+}
+
+function csvCell(value = '') {
+  const raw = String(value ?? '');
+  const safe = /^[=+\-@]/.test(raw) ? `'${raw}` : raw;
+  return `"${safe.replace(/"/g, '""')}"`;
+}
+
+function safeEqual(a = '', b = '') {
+  const left = Buffer.from(String(a));
+  const right = Buffer.from(String(b));
+  if (left.length !== right.length) return false;
+  return crypto.timingSafeEqual(left, right);
+}
+
+function verifyAdminPassword(password) {
+  const passwordHash = process.env.ADMIN_PASSWORD_HASH || '';
+  const legacySecret = process.env.ADMIN_SECRET || '';
+
+  if (passwordHash) {
+    const [algorithm, version, n, r, p, salt, expectedHash] = passwordHash.split(':');
+    if (algorithm !== 'scrypt' || version !== 'v1' || !salt || !expectedHash) {
+      console.error('[Admin] Invalid ADMIN_PASSWORD_HASH format.');
+      return false;
+    }
+
+    try {
+      const key = crypto.scryptSync(String(password), salt, 64, {
+        N: Number(n),
+        r: Number(r),
+        p: Number(p),
+      });
+      return safeEqual(key.toString('base64url'), expectedHash);
+    } catch (err) {
+      console.error('[Admin] Password hash verification failed:', err.message);
+      return false;
+    }
+  }
+
+  return !!legacySecret && safeEqual(password, legacySecret);
+}
+
+function base64Url(input) {
+  return Buffer.from(input).toString('base64url');
+}
+
+function signAdminPayload(payload) {
+  const signingSecret = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_SECRET || '';
+  return crypto
+    .createHmac('sha256', signingSecret)
+    .update(payload)
+    .digest('base64url');
+}
+
+function createAdminToken(email) {
+  const payload = JSON.stringify({
+    sub: email,
+    exp: Date.now() + 8 * 60 * 60 * 1000,
+  });
+  const encodedPayload = base64Url(payload);
+  return `${encodedPayload}.${signAdminPayload(encodedPayload)}`;
+}
+
+function verifyAdminToken(token) {
+  const signingSecret = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_SECRET || '';
+  if (!signingSecret || !token || !token.includes('.')) return false;
+
+  const [encodedPayload, signature] = token.split('.');
+  if (!encodedPayload || !signature || !safeEqual(signature, signAdminPayload(encodedPayload))) {
+    return false;
+  }
+
+  try {
+    const payload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf8'));
+    return Number(payload.exp) > Date.now();
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Health check endpoint
@@ -36,7 +185,7 @@ function createSmtpTransporter() {
   const { SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS } = process.env;
 
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-    console.warn('⚠️ [Backend SMTP] Missing SMTP credentials in env:', {
+    console.warn('[WARN] [Backend SMTP] Missing SMTP credentials in env:', {
       hasHost: !!SMTP_HOST,
       hasUser: !!SMTP_USER,
       hasPass: !!SMTP_PASS
@@ -101,7 +250,7 @@ async function sendWabaAlert({ name, phone, email, service, sourceForm }) {
       });
 
       if (resp.ok) {
-        console.log(`✅ [Backend WABA] Alert sent successfully via ${ep.url}`);
+        console.log(`[OK] [Backend WABA] Alert sent successfully via ${ep.url}`);
         return true;
       }
     } catch {
@@ -119,7 +268,7 @@ function generateHtmlFromConfig(config) {
   const c = {
     headerTitle: config.headerTitle || "Advait Digital",
     headerSubtitle: config.headerSubtitle || "Digital Services",
-    greeting: config.greeting || "Thank You, {{name}}! 🎉",
+    greeting: config.greeting || "Thank You, {{name}}! ",
     mainText: config.mainText || "We've received your enquiry for {{service}}. Our expert team is already reviewing your request and will reach out to you on {{phone}} within 24 hours.",
     step1: config.step1 || "Our team reviews your requirements",
     step2: config.step2 || "A dedicated expert calls you for a free consultation",
@@ -127,7 +276,7 @@ function generateHtmlFromConfig(config) {
     buttonText: config.buttonText || "Visit Our Website",
     buttonUrl: config.buttonUrl || "https://advaitdigital.co.in",
     footerLine1: config.footerLine1 || "Advait Digital",
-    footerLine2: config.footerLine2 || "Office No. 522, 5th Floor, Amanora Chambers, Amanora Town Centre, Pune — 411028",
+    footerLine2: config.footerLine2 || "Office No. 522, 5th Floor, Amanora Chambers, Amanora Town Centre, Pune - 411028",
     footerPhone: config.footerPhone || "+91 82829 82829",
     footerEmail: config.footerEmail || "sales@advaitteleservices.com",
     logoBase64: config.logoBase64 || "https://advaitdigital.co.in/favicon.png"
@@ -220,8 +369,8 @@ function generateHtmlFromConfig(config) {
                   <td style="font-size:12px;color:#3d3936;line-height:1.8;">
                     <strong style="color:#2c2927;">${c.footerLine1}</strong><br />
                     ${c.footerLine2}<br />
-                    📞 <a href="tel:${c.footerPhone.replace(/\s+/g, '')}" style="color:#f36308;text-decoration:none;">${c.footerPhone}</a> &nbsp;|&nbsp;
-                    ✉️ <a href="mailto:${c.footerEmail}" style="color:#f36308;text-decoration:none;">${c.footerEmail}</a>
+                    Phone: <a href="tel:${c.footerPhone.replace(/\s+/g, '')}" style="color:#f36308;text-decoration:none;">${c.footerPhone}</a> &nbsp;|&nbsp;
+                    Email: <a href="mailto:${c.footerEmail}" style="color:#f36308;text-decoration:none;">${c.footerEmail}</a>
                   </td>
                 </tr>
               </table>
@@ -231,7 +380,7 @@ function generateHtmlFromConfig(config) {
           <tr>
             <td style="background:#2c2927;padding:16px 40px;text-align:center;">
               <p style="margin:0;font-size:11px;color:#94a3b8;">
-                © 2025 ${c.headerTitle}. All rights reserved.<br />
+                (c) 2025 ${c.headerTitle}. All rights reserved.<br />
                 You are receiving this email because you submitted an enquiry on our website.
               </p>
             </td>
@@ -268,15 +417,15 @@ async function buildThankYouEmail({ name, phone, service }) {
 
         rawBody = generateHtmlFromConfig(config);
       } catch (e) {
-        console.error('❌ Failed parsing email config JSON, falling back to raw body:', e.message);
+        console.error('[ERROR] Failed parsing email config JSON, falling back to raw body:', e.message);
       }
     }
 
     const replace = (str) =>
       str
-        .replace(/\{\{name\}\}/g, name)
-        .replace(/\{\{phone\}\}/g, phone)
-        .replace(/\{\{service\}\}/g, service);
+        .replace(/\{\{name\}\}/g, escapeHtml(name))
+        .replace(/\{\{phone\}\}/g, escapeHtml(phone))
+        .replace(/\{\{service\}\}/g, escapeHtml(service));
 
     return {
       subject: replace(template.subject),
@@ -284,20 +433,19 @@ async function buildThankYouEmail({ name, phone, service }) {
       attachments
     };
   } catch (err) {
-    console.error('❌ [Backend] Could not fetch email template:', err.message);
+    console.error('[ERROR] [Backend] Could not fetch email template:', err.message);
     return null;
   }
 }
 
 /**
- * Admin auth middleware — validates Bearer token from ADMIN_SECRET env
+ * Admin auth middleware - validates Bearer token from ADMIN_SECRET env
  */
 function requireAdmin(req, res, next) {
-  const secret = process.env.ADMIN_SECRET || '';
   const auth = req.headers.authorization || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
 
-  if (!secret || token !== secret) {
+  if (!verifyAdminToken(token)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   next();
@@ -306,31 +454,59 @@ function requireAdmin(req, res, next) {
 // ============================================================
 // MAIN API: Submit Lead
 // ============================================================
-app.post('/api/submit-lead', (req, res) => {
-  const { name, phone, email, service, message, sourceForm = 'Website Form' } = req.body;
+app.post('/api/submit-lead', leadLimiter, async (req, res) => {
+  const name = normalizeText(req.body.name, 120);
+  const phone = normalizeText(req.body.phone, 30);
+  const email = normalizeText(req.body.email, 180);
+  const service = normalizeText(req.body.service, 180);
+  const message = normalizeText(req.body.message, 2000);
+  const sourceForm = normalizeText(req.body.sourceForm || 'Website Form', 150);
 
   if (!name || !phone || !service) {
     return res.status(400).json({ error: 'Name, phone, and service are required fields.' });
+  }
+
+  if (email && email !== 'Not provided' && !/\S+@\S+\.\S+/.test(email)) {
+    return res.status(400).json({ error: 'Please provide a valid email address.' });
   }
 
   const visitorIp =
     req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
     req.socket?.remoteAddress || '';
 
-  console.log(`⚡ [Backend] Instant lead received from ${name} (${phone}) - Service: ${service}`);
+  console.log(`[Lead] Instant lead received from ${name} (${phone}) - Service: ${service}`);
 
-  // Instant HTTP Success Response (Zero Delay)
+  // Save the lead before returning success so CMS tracking stays reliable.
+  try {
+    await prisma.lead.create({
+      data: {
+        name,
+        phone,
+        email: email && email !== 'Not provided' ? email : null,
+        service,
+        message: message || null,
+        sourceForm,
+        ipAddress: visitorIp || null,
+      }
+    });
+    console.log(`[DB] Lead saved for ${name} (${phone})`);
+  } catch (dbErr) {
+    console.error('[ERROR] [DB] Failed to save lead:', dbErr.message);
+    return res.status(500).json({ error: 'Could not save your enquiry right now. Please try again.' });
+  }
+
   res.json({
     success: true,
     message: 'Enquiry submitted successfully!'
   });
 
-  // Background processing: DB save + emails + WABA
+  // Background processing: emails + WABA
   setImmediate(async () => {
 
-    // 1. Save lead to PostgreSQL
+    // Legacy duplicate-save block removed from runtime.
+    /*
     try {
-      await prisma.lead.create({
+      await Promise.resolve({
         data: {
           name,
           phone,
@@ -341,10 +517,12 @@ app.post('/api/submit-lead', (req, res) => {
           ipAddress: visitorIp || null,
         }
       });
-      console.log(`✅ [DB] Lead saved for ${name} (${phone})`);
+      console.log(`[OK] [DB] Lead saved for ${name} (${phone})`);
     } catch (dbErr) {
-      console.error('❌ [DB] Failed to save lead:', dbErr.message);
+      console.error('[ERROR] [DB] Failed to save lead:', dbErr.message);
     }
+
+    */
 
     const transporter = createSmtpTransporter();
 
@@ -374,10 +552,19 @@ app.post('/api/submit-lead', (req, res) => {
           smtpFrom = `"Advait Digital Website" <${rawFrom}>`;
         }
 
+        const safeLead = {
+          name: escapeHtml(name),
+          phone: escapeHtml(phone),
+          email: escapeHtml(email || 'Not provided'),
+          service: escapeHtml(service),
+          sourceForm: escapeHtml(sourceForm),
+          message: escapeHtml(message),
+        };
+
         const adminMailOptions = {
           from: smtpFrom,
           to: process.env.NOTIFY_EMAIL || 'sales@advaitteleservices.com',
-          subject: `🚨 New Lead: ${name} (${service})`,
+          subject: `New Lead New Lead: ${name} (${service})`,
           attachments,
           html: `
             <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
@@ -393,28 +580,28 @@ app.post('/api/submit-lead', (req, res) => {
                 <table style="width: 100%; border-collapse: collapse;">
                   <tr style="border-bottom: 1px solid #f1f5f9;">
                     <td style="padding: 12px 0; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; width: 130px;">Full Name</td>
-                    <td style="padding: 12px 0; font-size: 15px; font-weight: 700; color: #0f172a;">${name}</td>
+                    <td style="padding: 12px 0; font-size: 15px; font-weight: 700; color: #0f172a;">${safeLead.name}</td>
                   </tr>
                   <tr style="border-bottom: 1px solid #f1f5f9;">
                     <td style="padding: 12px 0; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase;">Mobile No</td>
-                    <td style="padding: 12px 0; font-size: 16px; font-weight: 800; color: #ff6b00;">${phone}</td>
+                    <td style="padding: 12px 0; font-size: 16px; font-weight: 800; color: #ff6b00;">${safeLead.phone}</td>
                   </tr>
                   <tr style="border-bottom: 1px solid #f1f5f9;">
                     <td style="padding: 12px 0; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase;">Email Address</td>
-                    <td style="padding: 12px 0; font-size: 14px; font-weight: 600; color: #2563eb;">${email || 'Not provided'}</td>
+                    <td style="padding: 12px 0; font-size: 14px; font-weight: 600; color: #2563eb;">${safeLead.email}</td>
                   </tr>
                   <tr style="border-bottom: 1px solid #f1f5f9;">
                     <td style="padding: 12px 0; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase;">Service</td>
-                    <td style="padding: 12px 0; font-size: 15px; font-weight: 700; color: #0f172a;">${service}</td>
+                    <td style="padding: 12px 0; font-size: 15px; font-weight: 700; color: #0f172a;">${safeLead.service}</td>
                   </tr>
                   <tr style="border-bottom: 1px solid #f1f5f9;">
                     <td style="padding: 12px 0; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase;">Form Source</td>
-                    <td style="padding: 12px 0; font-size: 13px; font-weight: 600; color: #475569;">${sourceForm}</td>
+                    <td style="padding: 12px 0; font-size: 13px; font-weight: 600; color: #475569;">${safeLead.sourceForm}</td>
                   </tr>
                   ${message ? `
                   <tr>
                     <td style="padding: 12px 0; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase;">Message</td>
-                    <td style="padding: 12px 0; font-size: 14px; color: #334155; line-height: 1.5;">${message}</td>
+                    <td style="padding: 12px 0; font-size: 14px; color: #334155; line-height: 1.5;">${safeLead.message}</td>
                   </tr>
                   ` : ''}
                 </table>
@@ -429,9 +616,9 @@ app.post('/api/submit-lead', (req, res) => {
         };
 
         await transporter.sendMail(adminMailOptions);
-        console.log(`✅ [Backend SMTP] Admin notification email sent`);
+        console.log(`[OK] [Backend SMTP] Admin notification email sent`);
       } catch (mailErr) {
-        console.error('❌ [Backend SMTP] Admin email error:', mailErr.message);
+        console.error('[ERROR] [Backend SMTP] Admin email error:', mailErr.message);
       }
 
       // 3. Send Thank You email to customer (only if they provided an email)
@@ -453,10 +640,10 @@ app.post('/api/submit-lead', (req, res) => {
               html: tmpl.html,
               attachments: tmpl.attachments
             });
-            console.log(`✅ [Backend SMTP] Thank You email sent to ${customerEmail}`);
+            console.log(`[OK] [Backend SMTP] Thank You email sent to ${customerEmail}`);
           }
         } catch (tyErr) {
-          console.error('❌ [Backend SMTP] Thank You email error:', tyErr.message);
+          console.error('[ERROR] [Backend SMTP] Thank You email error:', tyErr.message);
         }
       }
     }
@@ -471,6 +658,10 @@ app.post('/api/submit-lead', (req, res) => {
 // ============================================================
 app.post('/api/analytics/visit', (req, res) => {
   try {
+    if (String(req.body.page || '').startsWith('/admin')) {
+      return res.json({ success: true, skipped: true });
+    }
+
     const visitorIp =
       req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
       req.socket?.remoteAddress || '';
@@ -478,7 +669,7 @@ app.post('/api/analytics/visit', (req, res) => {
     const count = recordVisit({ ...req.body, ip: visitorIp });
     res.json({ success: true, totalCount: count });
   } catch (err) {
-    console.error('❌ [Analytics] visit record error:', err.message);
+    console.error('[ERROR] [Analytics] visit record error:', err.message);
     res.json({ success: false });
   }
 });
@@ -496,33 +687,37 @@ app.get('/api/analytics/public-stats', (req, res) => {
       lastUpdated: stats.lastUpdated,
     });
   } catch (err) {
-    console.error('❌ [Analytics] stats error:', err.message);
+    console.error('[ERROR] [Analytics] stats error:', err.message);
     res.status(500).json({ error: 'Stats unavailable' });
   }
 });
 
 // ============================================================
-// ADMIN API — all routes protected by ADMIN_SECRET Bearer token
+// ADMIN API - all routes protected by ADMIN_SECRET Bearer token
 // ============================================================
+
+app.use('/api/admin', adminLimiter);
 
 /**
  * POST /api/admin/login
  * Returns success if the password matches ADMIN_SECRET
  */
-app.post('/api/admin/login', (req, res) => {
+app.post('/api/admin/login', adminLoginLimiter, (req, res) => {
   const { email, password } = req.body;
-  const secret = process.env.ADMIN_SECRET || '';
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@advaitdigital.co.in';
 
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
-  if (email.toLowerCase().trim() !== adminEmail.toLowerCase().trim() || password !== secret) {
+  if (
+    email.toLowerCase().trim() !== adminEmail.toLowerCase().trim() ||
+    !verifyAdminPassword(password)
+  ) {
     return res.status(401).json({ error: 'Invalid email or password' });
   }
 
-  res.json({ success: true, token: secret });
+  res.json({ success: true, token: createAdminToken(adminEmail) });
 });
 
 /**
@@ -552,7 +747,7 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
       today: 0
     });
   } catch (err) {
-    console.error('❌ [Admin] stats error:', err.message);
+    console.error('[ERROR] [Admin] stats error:', err.message);
     res.status(500).json({ error: 'Could not fetch stats' });
   }
 });
@@ -614,7 +809,7 @@ app.get('/api/admin/leads', requireAdmin, async (req, res) => {
       pages: Math.ceil(total / limit),
     });
   } catch (err) {
-    console.error('❌ [Admin] fetch leads error:', err.message);
+    console.error('[ERROR] [Admin] fetch leads error:', err.message);
     res.status(500).json({ error: 'Could not fetch leads' });
   }
 });
@@ -637,7 +832,7 @@ app.patch('/api/admin/leads/:id/status', requireAdmin, async (req, res) => {
     });
     res.json({ success: true });
   } catch (err) {
-    console.error('❌ [Admin] status update error:', err.message);
+    console.error('[ERROR] [Admin] status update error:', err.message);
     res.status(500).json({ error: 'Could not update status' });
   }
 });
@@ -656,7 +851,7 @@ app.patch('/api/admin/leads/:id/notes', requireAdmin, async (req, res) => {
     });
     res.json({ success: true });
   } catch (err) {
-    console.error('❌ [Admin] notes update error:', err.message);
+    console.error('[ERROR] [Admin] notes update error:', err.message);
     res.status(500).json({ error: 'Could not update notes' });
   }
 });
@@ -673,7 +868,7 @@ app.delete('/api/admin/leads/:id', requireAdmin, async (req, res) => {
     });
     res.json({ success: true });
   } catch (err) {
-    console.error('❌ [Admin] delete error:', err.message);
+    console.error('[ERROR] [Admin] delete error:', err.message);
     res.status(500).json({ error: 'Could not delete lead' });
   }
 });
@@ -685,7 +880,7 @@ app.delete('/api/admin/leads/:id', requireAdmin, async (req, res) => {
 app.get('/api/admin/leads/export', requireAdmin, async (req, res) => {
   try {
     const { status } = req.query;
-    console.log(`📥 [Backend] Export requested with status filter: "${status || 'All'}"`);
+    console.log(`[EXPORT] [Backend] Export requested with status filter: "${status || 'All'}"`);
     
     const where = {};
     if (status && status !== 'All') {
@@ -701,14 +896,14 @@ app.get('/api/admin/leads/export', requireAdmin, async (req, res) => {
     const rows = leads.map(r =>
       [
         r.id,
-        `"${(r.name || '').replace(/"/g, '""')}"`,
-        r.phone,
-        r.email || '',
-        `"${(r.service || '').replace(/"/g, '""')}"`,
-        `"${(r.sourceForm || '').replace(/"/g, '""')}"`,
-        r.status,
-        `"${(r.message || '').replace(/"/g, '""')}"`,
-        new Date(r.createdAt).toISOString()
+        csvCell(r.name),
+        csvCell(r.phone),
+        csvCell(r.email || ''),
+        csvCell(r.service || ''),
+        csvCell(r.sourceForm || ''),
+        csvCell(r.status),
+        csvCell(r.message || ''),
+        csvCell(new Date(r.createdAt).toISOString())
       ].join(',')
     ).join('\n');
 
@@ -716,7 +911,7 @@ app.get('/api/admin/leads/export', requireAdmin, async (req, res) => {
     res.setHeader('Content-Disposition', 'attachment; filename="advait_leads.csv"');
     res.send(header + rows);
   } catch (err) {
-    console.error('❌ [Admin] export error:', err.message);
+    console.error('[ERROR] [Admin] export error:', err.message);
     res.status(500).json({ error: 'Could not export leads' });
   }
 });
@@ -738,7 +933,7 @@ app.get('/api/admin/template', requireAdmin, async (req, res) => {
       updated_at: template.updatedAt
     });
   } catch (err) {
-    console.error('❌ [Admin] template fetch error:', err.message);
+    console.error('[ERROR] [Admin] template fetch error:', err.message);
     res.status(500).json({ error: 'Could not fetch template' });
   }
 });
@@ -762,11 +957,11 @@ app.put('/api/admin/template', requireAdmin, async (req, res) => {
     });
     res.json({ success: true });
   } catch (err) {
-    console.error('❌ [Admin] template update error:', err.message);
+    console.error('[ERROR] [Admin] template update error:', err.message);
     res.status(500).json({ error: 'Could not update template' });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Advait Digital Backend API Server running on port ${PORT}`);
+  console.log(`[START] Advait Digital Backend API Server running on port ${PORT}`);
 });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CookieIcon, X, ShieldCheck, ChartBar, Megaphone } from '@phosphor-icons/react';
 
@@ -13,7 +13,7 @@ const defaultConsent = {
   timestamp: null,
 };
 
-export function getConsent() {
+function getConsent() {
   try {
     const raw = localStorage.getItem(CONSENT_KEY);
     if (!raw) return null;
@@ -25,7 +25,7 @@ export function getConsent() {
   }
 }
 
-export function hasConsented() {
+function hasConsented() {
   return getConsent() !== null;
 }
 

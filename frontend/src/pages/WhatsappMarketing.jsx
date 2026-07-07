@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import SEOHead from '../components/SEOHead';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Globe, Robot, FileArrowUp, CurrencyInr, CheckCircle, 
   ArrowLeft, ArrowRight, Buildings, Airplane, GraduationCap, 
-  Storefront, ShoppingCart, Tag, WhatsappLogo
+  Storefront, ShoppingCart, Tag
 } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 

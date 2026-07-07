@@ -4,21 +4,27 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node prisma-init.js && node server.js",
-    "dev": "node prisma-init.js && node --watch server.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "node scripts/with-prisma-env.js prisma migrate deploy",
+    "db:migrate:dev": "node scripts/with-prisma-env.js prisma migrate dev",
+    "db:validate": "node scripts/with-prisma-env.js prisma validate",
+    "db:seed": "node prisma/seed.js",
+    "admin:hash-password": "node scripts/hash-admin-password.js",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "helmet": "^8.2.0",
     "nodemailer": "^9.0.3",
     "pg": "^8.22.0"
   },
   "devDependencies": {
     "prisma": "^6.0.0"
-  },
-  "prisma": {
-    "seed": "node prisma/seed.js"
   }
 }

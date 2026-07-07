@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
+import { prismaEnv } from '../scripts/prisma-env.js';
 
+process.env.DATABASE_URL = prismaEnv().DATABASE_URL;
 const prisma = new PrismaClient();
 
 const THANK_YOU_HTML = `<!DOCTYPE html>
@@ -7,7 +9,7 @@ const THANK_YOU_HTML = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Thank You — Advait Digital</title>
+  <title>Thank You - Advait Digital</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f2f1e5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f2f1e5;padding:32px 16px;">
@@ -23,7 +25,7 @@ const THANK_YOU_HTML = `<!DOCTYPE html>
           </tr>
           <tr>
             <td style="padding:40px 40px 32px;">
-              <h2 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#2c2927;">Thank You, {{name}}! 🎉</h2>
+              <h2 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#2c2927;">Thank You, {{name}}! </h2>
               <p style="margin:0 0 24px;font-size:15px;color:#3d3936;line-height:1.7;">
                 We've received your enquiry for <strong style="color:#f36308;">{{service}}</strong>. Our expert team is already reviewing your request and will reach out to you on <strong>{{phone}}</strong> within <strong>24 hours</strong>.
               </p>
@@ -85,9 +87,9 @@ const THANK_YOU_HTML = `<!DOCTYPE html>
                   <td style="font-size:12px;color:#3d3936;line-height:1.8;">
                     <strong style="color:#2c2927;">Advait Digital</strong><br />
                     Office No. 522, 5th Floor, Amanora Chambers,<br />
-                    Amanora Town Centre, Pune — 411028<br />
-                    📞 <a href="tel:+918282982829" style="color:#f36308;text-decoration:none;">+91 82829 82829</a> &nbsp;|&nbsp;
-                    ✉️ <a href="mailto:sales@advaitteleservices.com" style="color:#f36308;text-decoration:none;">sales@advaitteleservices.com</a>
+                    Amanora Town Centre, Pune - 411028<br />
+                    Phone: <a href="tel:+918282982829" style="color:#f36308;text-decoration:none;">+91 82829 82829</a> &nbsp;|&nbsp;
+                    Email: <a href="mailto:sales@advaitteleservices.com" style="color:#f36308;text-decoration:none;">sales@advaitteleservices.com</a>
                   </td>
                 </tr>
               </table>
@@ -96,7 +98,7 @@ const THANK_YOU_HTML = `<!DOCTYPE html>
           <tr>
             <td style="background:#2c2927;padding:16px 40px;text-align:center;">
               <p style="margin:0;font-size:11px;color:#94a3b8;">
-                © 2025 Advait Digital. All rights reserved.
+                (c) 2025 Advait Digital. All rights reserved.
               </p>
             </td>
           </tr>
@@ -108,22 +110,22 @@ const THANK_YOU_HTML = `<!DOCTYPE html>
 </html>`;
 
 async function main() {
-  console.log('🌱 Seeding database...');
+  console.log('[SEED] Seeding database...');
   await prisma.emailTemplate.upsert({
     where: { key: 'customer_thankyou' },
     update: {},
     create: {
       key: 'customer_thankyou',
-      subject: 'Thank You for Your Interest in {{service}} — Advait Digital',
+      subject: 'Thank You for Your Interest in {{service}} - Advait Digital',
       bodyHtml: THANK_YOU_HTML,
     },
   });
-  console.log('✅ Seeding completed.');
+  console.log('[OK] Seeding completed.');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Seeding failed:', e);
+    console.error('[ERROR] Seeding failed:', e);
     process.exit(1);
   })
   .finally(async () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import SEOHead from '../components/SEOHead';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -7,7 +7,6 @@ import {
   CaretLeft, CaretRight, Star, Quotes
 } from '@phosphor-icons/react';
 import ServiceCard from '../components/ServiceCard';
-import PhoneVideoPlayer from '../components/PhoneVideoPlayer';
 import TechVideoPlayer from '../components/TechVideoPlayer';
 
 // Import services illustrations
@@ -408,12 +407,12 @@ export default function Home() {
   useEffect(() => {
     const maxIndex = testimonials.length - itemsPerView;
     if (currentIndex > maxIndex) setCurrentIndex(Math.max(0, maxIndex));
-  }, [itemsPerView]);
+  }, [currentIndex, itemsPerView, testimonials.length]);
 
   useEffect(() => {
     const maxIndex = digitalServices.length - srvPerView;
     if (srvIndex > maxIndex) setSrvIndex(Math.max(0, maxIndex));
-  }, [srvPerView]);
+  }, [digitalServices.length, srvIndex, srvPerView]);
 
   const nextSlide = () => setCurrentIndex(prev => {
     const max = testimonials.length - itemsPerView;

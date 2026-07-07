@@ -1,9 +1,8 @@
-import React from 'react';
 import SEOHead from '../components/SEOHead';
 import { 
   Globe, Code, Cpu, Laptop, ShoppingCart, 
   ArrowsMerge, ArrowLeft, ArrowRight, Gear, Browser,
-  PaintBrush, ShieldCheck, Devices
+  PaintBrush, ShieldCheck
 } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 
@@ -599,4 +598,3 @@ export default function WebDev() {
     </div>
   );
 }
-

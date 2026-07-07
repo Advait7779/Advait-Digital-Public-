@@ -37,7 +37,7 @@ function writeData(data) {
   try {
     fs.writeFileSync(ANALYTICS_FILE, JSON.stringify(data, null, 2), 'utf8');
   } catch (err) {
-    console.error('❌ [Analytics] Failed to write analytics.json:', err.message);
+    console.error('[ERROR] [Analytics] Failed to write analytics.json:', err.message);
   }
 }
 

@@ -1,9 +1,8 @@
-import React from 'react';
 import SEOHead from '../components/SEOHead';
 import { motion } from 'framer-motion';
 import { 
-  ArrowLeft, ArrowRight, ChatCircleDots, Handshake, 
-  ShieldCheck, Lightning, Globe, Key, Clock, 
+  ArrowLeft, ArrowRight, ChatCircleDots,
+  ShieldCheck, Lightning, Globe,
   FileText, ChartBar, Check, X 
 } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
@@ -12,7 +11,6 @@ import { Link } from 'react-router-dom';
 import imgShirt from '../assets/wa_store_shirt.png';
 import imgHoney from '../assets/wa_store_honey.png';
 import imgShoes from '../assets/wa_store_shoes.png';
-import PhoneVideoPlayer from '../components/PhoneVideoPlayer';
 import TechVideoPlayer from '../components/TechVideoPlayer';
 
 export default function WhatsappApi() {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -7,7 +7,6 @@ import EnquiryModal from './components/EnquiryModal';
 import CookieConsent from './components/CookieConsent';
 import { trackVisit } from './services/analytics';
 import { motion, AnimatePresence } from 'framer-motion';
-import Admin from './pages/Admin';
 
 // Lazy-loaded Page Imports for code-splitting (SEO performance)
 const Home = lazy(() => import('./pages/Home'));
@@ -23,6 +22,7 @@ const WhatsappApi = lazy(() => import('./pages/WhatsappApi'));
 const VoiceCall = lazy(() => import('./pages/VoiceCall'));
 const TermsConditions = lazy(() => import('./pages/TermsConditions'));
 const Careers = lazy(() => import('./pages/Careers'));
+const Admin = lazy(() => import('./pages/Admin'));
 
 // Premium, minimal loading spinner fallback matching the site theme
 const PageLoader = () => (
@@ -37,6 +37,7 @@ function AppContent() {
   const location = useLocation();
 
   useEffect(() => {
+    if (location.pathname.startsWith('/admin')) return;
     // Track page view on every route change (self-hosted, privacy-safe)
     trackVisit(location.pathname);
   }, [location.pathname]);
@@ -74,7 +75,11 @@ export default function App() {
       <ScrollToTop />
       <Routes>
         {/* ── Admin CMS Panel (standalone, no main layout) ── */}
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin" element={
+          <Suspense fallback={<PageLoader />}>
+            <Admin />
+          </Suspense>
+        } />
 
         {/* ── Public Website ── */}
         <Route path="/*" element={

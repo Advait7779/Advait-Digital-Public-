@@ -1,4 +1,3 @@
-import React from 'react';
 import SEOHead from '../components/SEOHead';
 import { 
   Briefcase, GraduationCap, Users, MapPin, Clock, 

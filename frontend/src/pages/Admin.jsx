@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { Fragment, useState, useEffect, useCallback, useRef } from 'react';
 import { getApiBaseUrl } from '../services/api.js';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -207,7 +207,7 @@ const Icon = {
 // ─── Custom Dropdowns ────────────────────────────────────────────────────────
 function CustomDropdown({ value, options, onChange, colors }) {
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = React.useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -262,7 +262,7 @@ function CustomDropdown({ value, options, onChange, colors }) {
 
 function FilterDropdown({ value, options, onChange, colors }) {
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = React.useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -320,7 +320,7 @@ function FilterDropdown({ value, options, onChange, colors }) {
 
 function LimitDropdown({ value, onChange }) {
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = React.useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -578,7 +578,9 @@ function LeadsView({ token }) {
       setLeads(data.leads || []);
       setTotal(data.total || 0);
       setPages(data.pages || 1);
-    } catch { /* silent */ }
+    } catch {
+      setLeads([]);
+    }
     finally { setLoading(false); }
   }, [token, page, status, search, limit]);
 
@@ -597,7 +599,9 @@ function LeadsView({ token }) {
       await fetch(`${API_BASE}/api/admin/leads/${id}`, { method: 'DELETE', headers: authHeaders(token) });
       setLeads(prev => prev.filter(l => l.id !== id));
       setTotal(t => t - 1);
-    } catch {}
+    } catch {
+      setDeleteTargetId(null);
+    }
   };
 
   const exportCSV = (selectedStatus) => {
@@ -683,7 +687,7 @@ function LeadsView({ token }) {
                 <tr><td colSpan={9} className="px-5 py-16 text-center text-gray-400 font-semibold text-sm">No leads found</td></tr>
               )}
               {leads.map((lead, idx) => (
-                <React.Fragment key={lead.id}>
+                <Fragment key={lead.id}>
                   <tr
                     className={`border-b border-gray-50 hover:bg-orange-50/30 transition cursor-pointer ${expandedId === lead.id ? 'bg-orange-50/40' : idx % 2 !== 0 ? 'bg-gray-50/40' : 'bg-white'}`}
                     onClick={() => setExpandedId(expandedId === lead.id ? null : lead.id)}
@@ -746,7 +750,7 @@ function LeadsView({ token }) {
                       </td>
                     </tr>
                   )}
-                </React.Fragment>
+                </Fragment>
               ))}
             </tbody>
           </table>
@@ -1032,7 +1036,7 @@ function TemplateView({ token }) {
           try {
             const parsed = JSON.parse(rawBody);
             setFields({ ...DEFAULT_FIELDS, ...parsed });
-          } catch (e) {
+          } catch {
             // Keep default fields
           }
         }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PaperPlaneTilt, CheckCircle, Spinner } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
@@ -45,7 +45,7 @@ export default function DemoForm({ defaultService = '' }) {
     if (!formData.name.trim()) newErrors.name = 'Name is required';
     if (!formData.phone.trim()) {
       newErrors.phone = 'Mobile number is required';
-    } else if (!/^\+?([0-9]{2})?[-. ]?([0-9]{10})$/.test(formData.phone.replace(/[\s\-]/g, ''))) {
+    } else if (!/^\+?([0-9]{2})?[-. ]?([0-9]{10})$/.test(formData.phone.replace(/[\s-]/g, ''))) {
       newErrors.phone = 'Please enter a valid 10-digit mobile number';
     }
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {

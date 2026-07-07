@@ -1,45 +1,41 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import SEOHead from '../components/SEOHead';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Megaphone, PhoneCall, WhatsappLogo, ArrowLeft, ArrowRight,
-  ShieldCheck, TrendUp, Broadcast, Check, Handshake
-} from '@phosphor-icons/react';
+import { PhoneCall, WhatsappLogo, ArrowLeft, ArrowRight } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 
 // Import election campaign graphic
 import imgElectionHero from '../assets/election_hero.png';
 import TechVideoPlayer from '../components/TechVideoPlayer';
 
+const ELECTION_CONVERSATION = [
+  { sender: 'user', text: "Hi, who is the candidate for our ward?" },
+  {
+    sender: 'bot',
+    text: "Hello! Our candidate is Amit Sharma. Here is his profile & vision card:",
+    card: {
+      title: "Amit Sharma",
+      subtitle: "Candidate - Ward 12",
+      details: "Focus: Clean Water & Smart Roads",
+      action: "View Manifesto"
+    }
+  },
+  { sender: 'user', text: "Looks great. Where is the rally today?" },
+  { sender: 'bot', text: "Today's rally is at Town Hall, starting at 5:00 PM. See you there!" },
+  { sender: 'user', text: "Will there be a live stream?" },
+  { sender: 'bot', text: "Yes! Watch live at 5:00 PM: advait.in/live" }
+];
 const ElectionChatStream = () => {
   const [messages, setMessages] = useState([]);
   const chatContainerRef = useRef(null);
-
-  const conversation = [
-    { sender: 'user', text: "Hi, who is the candidate for our ward?" },
-    { 
-      sender: 'bot', 
-      text: "Hello! Our candidate is Amit Sharma. Here is his profile & vision card:",
-      card: {
-        title: "Amit Sharma",
-        subtitle: "Candidate - Ward 12",
-        details: "Focus: Clean Water & Smart Roads",
-        action: "View Manifesto"
-      }
-    },
-    { sender: 'user', text: "Looks great. Where is the rally today?" },
-    { sender: 'bot', text: "Today's rally is at Town Hall, starting at 5:00 PM. See you there! 📢" },
-    { sender: 'user', text: "Will there be a live stream?" },
-    { sender: 'bot', text: "Yes! Watch live at 5:00 PM: advait.in/live 🎥" }
-  ];
 
   useEffect(() => {
     let index = 0;
     const timeouts = [];
 
     const addNextMessage = () => {
-      if (index < conversation.length) {
-        const currentMsg = conversation[index];
+      if (index < ELECTION_CONVERSATION.length) {
+        const currentMsg = ELECTION_CONVERSATION[index];
         setMessages(prev => [...prev, currentMsg]);
         index++;
         const delay = currentMsg.sender === 'user' ? 1200 : 2000;

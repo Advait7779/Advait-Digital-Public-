@@ -1,20 +1,16 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import SEOHead from '../components/SEOHead';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  EnvelopeOpen, ArrowLeft, CurrencyInr, ArrowRight, ShieldCheck,
-  CheckCircle, ListChecks, Laptop, Gear, Clock, Phone, ChatCircleText,
-  UserCheck, Globe
+  ArrowLeft, ArrowRight, CheckCircle
 } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
-import PhoneVideoPlayer from '../components/PhoneVideoPlayer';
 import TechVideoPlayer from '../components/TechVideoPlayer';
 
 // Import graphics copied from uploaded assets
 import imgStory from '../assets/sms_story.png';
 import imgPersonal from '../assets/sms_personal.png';
 import imgConversation from '../assets/sms_conversation.png';
-import imgPhone from '../assets/sms_marketing_phone.png';
 import imgDelivered from '../assets/sms_delivered.png';
 import imgRead from '../assets/sms_read.png';
 import imgAdapt from '../assets/sms_adapt.png';

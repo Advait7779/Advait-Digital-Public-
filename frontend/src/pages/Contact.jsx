@@ -1,7 +1,5 @@
-import React from 'react';
 import SEOHead from '../components/SEOHead';
-import { motion } from 'framer-motion';
-import { Phone, Envelope, MapPin, Clock, FacebookLogo, TwitterLogo, LinkedinLogo } from '@phosphor-icons/react';
+import { Phone, Envelope, MapPin, Clock } from '@phosphor-icons/react';
 import DemoForm from '../components/DemoForm';
 
 export default function Contact() {

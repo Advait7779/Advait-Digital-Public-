@@ -11,11 +11,32 @@ const frontendDir = path.join(rootDir, 'frontend');
 const frontendDist = path.join(frontendDir, 'dist');
 const rootDist = path.join(rootDir, 'dist');
 
-console.log('🚀 Building Frontend App...');
+function sleep(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+function removeRecursiveWithRetry(target) {
+  if (!fs.existsSync(target)) return;
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    try {
+      fs.rmSync(target, { recursive: true, force: true, maxRetries: 3, retryDelay: 250 });
+      return;
+    } catch (err) {
+      if (!['EBUSY', 'EPERM', 'ENOTEMPTY'].includes(err.code) || attempt === 5) {
+        console.warn(`[WARN] Could not fully remove ${target}: ${err.message}`);
+        return;
+      }
+      sleep(250 * attempt);
+    }
+  }
+}
+
+console.log('[BUILD] Building Frontend App...');
 execSync('npm install', { cwd: frontendDir, stdio: 'inherit' });
 execSync('npm run build', { cwd: frontendDir, stdio: 'inherit' });
 
-console.log('📦 Copying build artifacts to root dist/ for Coolify compatibility...');
+console.log('[BUILD] Copying build artifacts to root dist/ for Coolify compatibility...');
 
 function copyRecursiveSync(src, dest) {
   const exists = fs.existsSync(src);
@@ -29,14 +50,20 @@ function copyRecursiveSync(src, dest) {
       copyRecursiveSync(path.join(src, childItemName), path.join(dest, childItemName));
     });
   } else {
-    fs.copyFileSync(src, dest);
+    try {
+      fs.copyFileSync(src, dest);
+    } catch (err) {
+      if (['EBUSY', 'EPERM'].includes(err.code) && fs.existsSync(dest)) {
+        console.warn(`[WARN] Skipped locked file during local copy: ${dest}`);
+        return;
+      }
+      throw err;
+    }
   }
 }
 
-if (fs.existsSync(rootDist)) {
-  fs.rmSync(rootDist, { recursive: true, force: true });
-}
+removeRecursiveWithRetry(rootDist);
 
 copyRecursiveSync(frontendDist, rootDist);
 
-console.log('✅ Build completed successfully! Generated dist/ at both root and frontend/dist.');
+console.log('[OK] Build completed successfully. Generated dist/ at both root and frontend/dist.');

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, Envelope, MapPin, FacebookLogo, TwitterLogo, LinkedinLogo, ArrowUpRight, Eye } from '@phosphor-icons/react';
 import { fetchVisitorStats } from '../services/analytics';

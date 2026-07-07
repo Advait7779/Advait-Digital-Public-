@@ -1,11 +1,9 @@
-import React from 'react';
 import SEOHead from '../components/SEOHead';
 import { 
   ShieldCheck, Eye, Target, ListChecks,
   ArrowRight, Check
 } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
-import imgAboutDesigner from '../assets/about_designer.png';
 import imgEasyInstallation from '../assets/about_easy_installation.png';
 import imgCostEffective from '../assets/about_cost_effective.png';
 import imgCustomerSupport from '../assets/about_customer_support.png';

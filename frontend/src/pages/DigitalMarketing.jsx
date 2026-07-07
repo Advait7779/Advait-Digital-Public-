@@ -1,12 +1,10 @@
-import React from 'react';
 import SEOHead from '../components/SEOHead';
 import { 
   Users, Cpu, FileText, Target, ShieldCheck, 
   ArrowLeft, ArrowRight, Megaphone, Laptop, 
-  ChatCircleText, Globe, Phone, Gear
+  ChatCircleText, Globe, Phone
 } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
-import PhoneVideoPlayer from '../components/PhoneVideoPlayer';
 import TechVideoPlayer from '../components/TechVideoPlayer';
 
 // Import graphics copied from uploaded assets
