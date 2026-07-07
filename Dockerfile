@@ -18,6 +18,7 @@ RUN node build-all.js
 
 # ── Stage 2: Serve Statically with Caddy ──
 FROM caddy:2-alpine
-COPY --from=builder /app/dist /usr/share/caddy
+COPY --from=builder /app/dist /app/dist
+COPY Caddyfile /etc/caddy/Caddyfile
 EXPOSE 80
-CMD ["caddy", "file-server", "--root", "/usr/share/caddy", "--listen", ":80"]
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
