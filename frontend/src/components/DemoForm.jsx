@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PaperPlaneTilt, CheckCircle, Spinner } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 import { sendWhatsAppLeadAlert } from '../services/whatsappService';
+import { submitLead } from '../services/api';
 
 export default function DemoForm({ defaultService = '' }) {
   const [formData, setFormData] = useState({
@@ -67,51 +68,49 @@ export default function DemoForm({ defaultService = '' }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
     setSubmitError('');
-    setIsSuccess(true);
+    setIsSubmitting(true);
 
     const serviceLabel = services.find(s => s.value === formData.service)?.label || formData.service;
-    const backendEndpoint = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/submit-lead` : '/api/submit-lead';
+    const submittedLead = {
+      name: formData.name.trim(),
+      phone: formData.phone.trim(),
+      email: formData.email.trim(),
+      service: serviceLabel,
+    };
 
-    // Send lead to backend API for secure email dispatch to sales@advaitteleservices.com
-    fetch(backendEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({
-        name: formData.name,
-        phone: formData.phone,
-        email: formData.email || 'Not provided',
-        service: serviceLabel,
-        message: formData.message || 'No message provided',
+    try {
+      await submitLead({
+        ...submittedLead,
+        email: submittedLead.email || 'Not provided',
+        message: formData.message.trim() || 'No message provided',
         sourceForm: 'Demo Request Form (Contact Section)'
-      }),
-    }).catch(() => {});
-
-    // Trigger pre-filled WhatsApp redirect to +91 9921968968 after 1 second
-    setTimeout(() => {
-      sendWhatsAppLeadAlert({
-        name: formData.name,
-        phone: formData.phone,
-        email: formData.email,
-        service: serviceLabel
       });
-    }, 1000);
 
-    setFormData({
-      name: '',
-      phone: '',
-      email: '',
-      service: defaultService,
-      message: '',
-      consent: false
-    });
+      setIsSuccess(true);
+
+      // Trigger pre-filled WhatsApp redirect to +91 9921968968 after 1 second
+      setTimeout(() => {
+        sendWhatsAppLeadAlert(submittedLead);
+      }, 1000);
+
+      setFormData({
+        name: '',
+        phone: '',
+        email: '',
+        service: defaultService,
+        message: '',
+        consent: false
+      });
+    } catch (err) {
+      setSubmitError(err.message || 'Unable to submit your request right now. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -147,7 +146,6 @@ export default function DemoForm({ defaultService = '' }) {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="John Doe"
                   className={`w-full px-4 py-3 rounded-lg bg-white border ${errors.name ? 'border-brand-orange' : 'border-brand-charcoal/10'} focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange transition duration-200 text-sm`}
                 />
                 {errors.name && <p className="text-brand-orange text-xs mt-1">{errors.name}</p>}
@@ -166,7 +164,6 @@ export default function DemoForm({ defaultService = '' }) {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    placeholder="9921968968"
                     className={`w-full px-4 py-3 rounded-lg bg-white border ${errors.phone ? 'border-brand-orange' : 'border-brand-charcoal/10'} focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange transition duration-200 text-sm`}
                   />
                   {errors.phone && <p className="text-brand-orange text-xs mt-1">{errors.phone}</p>}
@@ -183,7 +180,6 @@ export default function DemoForm({ defaultService = '' }) {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="sales@company.com"
                     className={`w-full px-4 py-3 rounded-lg bg-white border ${errors.email ? 'border-brand-orange' : 'border-brand-charcoal/10'} focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange transition duration-200 text-sm`}
                   />
                   {errors.email && <p className="text-brand-orange text-xs mt-1">{errors.email}</p>}
@@ -211,7 +207,7 @@ export default function DemoForm({ defaultService = '' }) {
                     <span className={formData.service ? 'text-brand-charcoal font-medium' : 'text-brand-charcoal-light/40 font-medium'}>
                       {formData.service 
                         ? services.find(s => s.value === formData.service)?.label 
-                        : '-- Select Digital Service --'}
+                        : 'Select Service'}
                     </span>
                     <svg
                       className={`fill-current h-4 w-4 text-brand-charcoal-light transition-transform duration-200 ${
@@ -282,7 +278,6 @@ export default function DemoForm({ defaultService = '' }) {
                   name="message"
                   value={formData.message}
                   onChange={handleChange}
-                  placeholder="Tell us about your business goals or campaign requirements..."
                   rows="3"
                   className="w-full px-4 py-3 rounded-lg bg-white border border-brand-charcoal/10 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange transition duration-200 text-sm resize-none"
                 />

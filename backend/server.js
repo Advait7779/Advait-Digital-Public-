@@ -112,6 +112,138 @@ async function sendWabaAlert({ name, phone, email, service, sourceForm }) {
 }
 
 /**
+ * Compile JSON email configuration to standard responsive HTML
+ */
+function generateHtmlFromConfig(config) {
+  const c = {
+    headerTitle: config.headerTitle || "Advait Digital",
+    headerSubtitle: config.headerSubtitle || "Digital Services",
+    greeting: config.greeting || "Thank You, {{name}}! 🎉",
+    mainText: config.mainText || "We've received your enquiry for {{service}}. Our expert team is already reviewing your request and will reach out to you on {{phone}} within 24 hours.",
+    step1: config.step1 || "Our team reviews your requirements",
+    step2: config.step2 || "A dedicated expert calls you for a free consultation",
+    step3: config.step3 || "We set up a live demo tailored to your business",
+    buttonText: config.buttonText || "Visit Our Website",
+    buttonUrl: config.buttonUrl || "https://advaitdigital.co.in",
+    footerLine1: config.footerLine1 || "Advait Digital",
+    footerLine2: config.footerLine2 || "Office No. 522, 5th Floor, Amanora Chambers, Amanora Town Centre, Pune — 411028",
+    footerPhone: config.footerPhone || "+91 82829 82829",
+    footerEmail: config.footerEmail || "sales@advaitteleservices.com",
+    logoBase64: config.logoBase64 || "https://advaitdigital.co.in/favicon.png"
+  };
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <title>Thank You</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f2f1e5;font-family:'Inter',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f2f1e5;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+          <!-- Header -->
+          <tr>
+            <td style="background:#2c2927;padding:32px 40px;text-align:center;border-bottom:4px solid #f36308;">
+              <img src="${c.logoBase64}" alt="Advait Digital" width="64" height="64" style="border-radius:14px;margin-bottom:16px;display:block;margin-left:auto;margin-right:auto;" />
+              <h1 style="margin:0;font-size:26px;font-weight:800;color:#ffffff;letter-spacing:0.3px;">${c.headerTitle}</h1>
+              <p style="margin:6px 0 0;font-size:12px;color:#f36308;font-weight:600;text-transform:uppercase;letter-spacing:2px;">${c.headerSubtitle}</p>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding:40px 40px 32px;">
+              <h2 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#2c2927;">${c.greeting}</h2>
+              <p style="margin:0 0 24px;font-size:15px;color:#3d3936;line-height:1.7;">${c.mainText}</p>
+              <hr style="border:none;border-top:1px solid #f2f1e5;margin:0 0 24px;" />
+              <h3 style="margin:0 0 16px;font-size:16px;font-weight:700;color:#2c2927;">What Happens Next?</h3>
+              <table cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="padding:10px 0;vertical-align:top;">
+                    <table cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="width:36px;vertical-align:top;">
+                          <div style="width:28px;height:28px;border-radius:50%;background:#f36308;color:#fff;text-align:center;line-height:28px;font-size:13px;font-weight:700;">1</div>
+                        </td>
+                        <td style="padding-left:12px;vertical-align:middle;">
+                          <p style="margin:0;font-size:14px;color:#3d3936;font-weight:600;">${c.step1}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;vertical-align:top;">
+                    <table cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="width:36px;vertical-align:top;">
+                          <div style="width:28px;height:28px;border-radius:50%;background:#f36308;color:#fff;text-align:center;line-height:28px;font-size:13px;font-weight:700;">2</div>
+                        </td>
+                        <td style="padding-left:12px;vertical-align:middle;">
+                          <p style="margin:0;font-size:14px;color:#3d3936;font-weight:600;">${c.step2}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;vertical-align:top;">
+                    <table cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="width:36px;vertical-align:top;">
+                          <div style="width:28px;height:28px;border-radius:50%;background:#f36308;color:#fff;text-align:center;line-height:28px;font-size:13px;font-weight:700;">3</div>
+                        </td>
+                        <td style="padding-left:12px;vertical-align:middle;">
+                          <p style="margin:0;font-size:14px;color:#3d3936;font-weight:600;">${c.step3}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              <div style="margin:32px 0 0;text-align:center;">
+                <a href="${c.buttonUrl}" style="display:inline-block;background:#f36308;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:50px;letter-spacing:0.3px;">${c.buttonText}</a>
+              </div>
+            </td>
+          </tr>
+          <!-- Contact Strip -->
+          <tr>
+            <td style="background:#fbfbf7;padding:24px 40px;border-top:1px solid #f2f1e5;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="font-size:12px;color:#3d3936;line-height:1.8;">
+                    <strong style="color:#2c2927;">${c.footerLine1}</strong><br />
+                    ${c.footerLine2}<br />
+                    📞 <a href="tel:${c.footerPhone.replace(/\s+/g, '')}" style="color:#f36308;text-decoration:none;">${c.footerPhone}</a> &nbsp;|&nbsp;
+                    ✉️ <a href="mailto:${c.footerEmail}" style="color:#f36308;text-decoration:none;">${c.footerEmail}</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background:#2c2927;padding:16px 40px;text-align:center;">
+              <p style="margin:0;font-size:11px;color:#94a3b8;">
+                © 2025 ${c.headerTitle}. All rights reserved.<br />
+                You are receiving this email because you submitted an enquiry on our website.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+/**
  * Fetch the Thank You email template from DB and replace placeholders
  */
 async function buildThankYouEmail({ name, phone, service }) {
@@ -122,6 +254,24 @@ async function buildThankYouEmail({ name, phone, service }) {
     );
     if (!result.rows.length) return null;
 
+    let rawBody = result.rows[0].body_html;
+    let attachments = [];
+
+    if (rawBody.trim().startsWith('{')) {
+      try {
+        const config = JSON.parse(rawBody);
+
+        // Keep logo inline in HTML body instead of attaching it via CID attachments
+        if (!config.logoBase64) {
+          config.logoBase64 = 'https://advaitdigital.co.in/favicon.png';
+        }
+
+        rawBody = generateHtmlFromConfig(config);
+      } catch (e) {
+        console.error('❌ Failed parsing email config JSON, falling back to raw body:', e.message);
+      }
+    }
+
     const replace = (str) =>
       str
         .replace(/\{\{name\}\}/g, name)
@@ -130,7 +280,8 @@ async function buildThankYouEmail({ name, phone, service }) {
 
     return {
       subject: replace(result.rows[0].subject),
-      html: replace(result.rows[0].body_html),
+      html: replace(rawBody),
+      attachments
     };
   } catch (err) {
     console.error('❌ [Backend] Could not fetch email template:', err.message);
@@ -291,6 +442,7 @@ app.post('/api/submit-lead', (req, res) => {
               to: customerEmail,
               subject: tmpl.subject,
               html: tmpl.html,
+              attachments: tmpl.attachments
             });
             console.log(`✅ [Backend SMTP] Thank You email sent to ${customerEmail}`);
           }
@@ -349,11 +501,18 @@ app.get('/api/analytics/public-stats', (req, res) => {
  * Returns success if the password matches ADMIN_SECRET
  */
 app.post('/api/admin/login', (req, res) => {
-  const { password } = req.body;
+  const { email, password } = req.body;
   const secret = process.env.ADMIN_SECRET || '';
-  if (!secret || password !== secret) {
-    return res.status(401).json({ error: 'Invalid credentials' });
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@advaitdigital.co.in';
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
   }
+
+  if (email.toLowerCase().trim() !== adminEmail.toLowerCase().trim() || password !== secret) {
+    return res.status(401).json({ error: 'Invalid email or password' });
+  }
+
   res.json({ success: true, token: secret });
 });
 
@@ -418,7 +577,7 @@ app.get('/api/admin/leads', requireAdmin, async (req, res) => {
     const dataResult = await query(
       `SELECT id, name, phone, email, service, source_form, status, message, created_at
        FROM leads ${where}
-       ORDER BY created_at DESC
+       ORDER BY id DESC
        LIMIT $${idx} OFFSET $${idx + 1}`,
       [...params, limit, offset]
     );
@@ -498,10 +657,21 @@ app.delete('/api/admin/leads/:id', requireAdmin, async (req, res) => {
  */
 app.get('/api/admin/leads/export', requireAdmin, async (req, res) => {
   try {
-    const result = await query(
-      `SELECT id, name, phone, email, service, source_form, status, message, created_at
-       FROM leads ORDER BY created_at DESC`
-    );
+    const { status } = req.query;
+    console.log(`📥 [Backend] Export requested with status filter: "${status || 'All'}"`);
+    let result;
+    if (status && status !== 'All') {
+      result = await query(
+        `SELECT id, name, phone, email, service, source_form, status, message, created_at
+         FROM leads WHERE status = $1 ORDER BY id DESC`,
+        [status]
+      );
+    } else {
+      result = await query(
+        `SELECT id, name, phone, email, service, source_form, status, message, created_at
+         FROM leads ORDER BY id DESC`
+      );
+    }
     const header = 'ID,Name,Phone,Email,Service,Source Form,Status,Message,Date\n';
     const rows = result.rows.map(r =>
       [

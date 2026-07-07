@@ -51,7 +51,7 @@ export default function About() {
   return (
     <div className="pt-24 space-y-12 sm:space-y-16 md:space-y-20 pb-12 sm:pb-16 md:pb-20 bg-brand-cream-light">
       <SEOHead
-        title="About Advait Digital — Bulk SMS & Digital Marketing Company Pune India"
+        title="About Us"
         description="Advait Teleservices Private Limited (Advait Digital) is a leading SMS service provider, WhatsApp API partner, and digital marketing company based in Pune, India. Trusted by businesses across India."
         keywords="about Advait Digital, Advait Teleservices Private Limited, bulk SMS company Pune, digital marketing company India, SMS service provider India, WhatsApp API company Pune, RCS messaging company, about us, messaging service Pune"
         canonical="/about"

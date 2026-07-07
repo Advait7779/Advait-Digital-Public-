@@ -5,7 +5,7 @@
  */
 import { Helmet } from 'react-helmet-async';
 
-const SITE_NAME = 'Advait Digital';
+const SITE_NAME = 'Advait Digital Services';
 const BASE_URL  = 'https://advaitdigital.co.in';
 const OG_IMAGE  = `${BASE_URL}/favicon.png`;
 const DEFAULT_ROBOTS = 'index, follow';

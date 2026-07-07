@@ -23,6 +23,10 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-sans font-bold tracking-tight;
   }
+
+  button, input, select, textarea {
+    font-family: 'Inter', sans-serif !important;
+  }
 }
 
 /* Custom scrollbar */
@@ -66,4 +70,15 @@
 .border-slate-200\/60,
 .glass-card {
   border-color: rgba(44, 41, 39, 0.22) !important;
+}
+
+/* Custom Global Border Radius Enhancements - Sharper Edges */
+.rounded-3xl {
+  border-radius: 12px !important;
+}
+.rounded-2xl {
+  border-radius: 10px !important;
+}
+.rounded-xl {
+  border-radius: 8px !important;
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle, Spinner, CaretDown, PaperPlaneTilt } from '@phosphor-icons/react';
 import { sendWhatsAppLeadAlert } from '../services/whatsappService';
+import { submitLead } from '../services/api';
 
 export default function EnquiryModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -82,42 +83,36 @@ export default function EnquiryModal() {
     setErrorMsg('');
 
     const selectedServiceLabel = services.find(s => s.value === formData.service)?.label || formData.service;
-    const backendEndpoint = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/submit-lead` : '/api/submit-lead';
+    const submittedLead = {
+      name: formData.name.trim(),
+      phone: formData.phone.trim(),
+      email: formData.email.trim(),
+      service: selectedServiceLabel,
+    };
 
-    // Send lead to backend API for secure email dispatch to sales@advaitteleservices.com
-    fetch(backendEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({
-        name: formData.name,
-        phone: formData.phone,
-        email: formData.email,
-        service: selectedServiceLabel,
+    try {
+      await submitLead({
+        ...submittedLead,
         sourceForm: 'Popup Free Demo Modal'
-      }),
-    }).catch(() => {});
-
-    setIsSuccess(true);
-    setIsSubmitting(false);
-
-    // Trigger pre-filled WhatsApp redirect to +91 9921968968 after 1 second
-    setTimeout(() => {
-      sendWhatsAppLeadAlert({
-        name: formData.name,
-        phone: formData.phone,
-        email: formData.email,
-        service: selectedServiceLabel
       });
-    }, 1000);
 
-    setTimeout(() => {
-      setIsSuccess(false);
-      setIsOpen(false);
-      setFormData({ name: '', phone: '', email: '', service: 'election_sms' });
-    }, 3500);
+      setIsSuccess(true);
+
+      // Trigger pre-filled WhatsApp redirect to +91 9921968968 after 1 second
+      setTimeout(() => {
+        sendWhatsAppLeadAlert(submittedLead);
+      }, 1000);
+
+      setTimeout(() => {
+        setIsSuccess(false);
+        setIsOpen(false);
+        setFormData({ name: '', phone: '', email: '', service: 'election_sms' });
+      }, 3500);
+    } catch (err) {
+      setErrorMsg(err.message || 'Unable to submit your request right now. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -207,7 +202,6 @@ export default function EnquiryModal() {
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
-                        placeholder="Enter your full name"
                         required
                         className="w-full px-3.5 py-2.5 rounded-lg bg-gray-50 border border-gray-200 text-xs sm:text-sm font-medium text-brand-charcoal focus:outline-hidden focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange focus:bg-white transition duration-200"
                       />
@@ -223,7 +217,6 @@ export default function EnquiryModal() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        placeholder="10-digit mobile"
                         maxLength={10}
                         required
                         className="w-full px-3.5 py-2.5 rounded-lg bg-gray-50 border border-gray-200 text-xs sm:text-sm font-medium text-brand-charcoal focus:outline-hidden focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange focus:bg-white transition duration-200"
@@ -240,7 +233,6 @@ export default function EnquiryModal() {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        placeholder="name@company.com"
                         required
                         className="w-full px-3.5 py-2.5 rounded-lg bg-gray-50 border border-gray-200 text-xs sm:text-sm font-medium text-brand-charcoal focus:outline-hidden focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange focus:bg-white transition duration-200"
                       />
@@ -263,7 +255,7 @@ export default function EnquiryModal() {
                           } focus:outline-hidden`}
                         >
                           <span className="font-semibold text-brand-charcoal truncate">
-                            {services.find(s => s.value === formData.service)?.label || '-- Select Service --'}
+                            {services.find(s => s.value === formData.service)?.label || 'Select Service'}
                           </span>
                           <CaretDown
                             size={16}

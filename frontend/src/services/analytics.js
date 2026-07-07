@@ -4,7 +4,7 @@
  * No third-party dependencies. Works with cookie consent.
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+import { buildApiUrl } from './api';
 
 /** Generate or retrieve a session ID stored in sessionStorage */
 function getSessionId() {
@@ -63,7 +63,7 @@ export function trackVisit(page = window.location.pathname) {
   };
 
   // Fire and forget — non-blocking
-  fetch(`${API_BASE}/api/analytics/visit`, {
+  fetch(buildApiUrl('/api/analytics/visit'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -77,7 +77,7 @@ export function trackVisit(page = window.location.pathname) {
  */
 export async function fetchVisitorStats() {
   try {
-    const res = await fetch(`${API_BASE}/api/analytics/public-stats`);
+    const res = await fetch(buildApiUrl('/api/analytics/public-stats'));
     if (!res.ok) return null;
     return await res.json();
   } catch {

@@ -33,7 +33,7 @@ export default function Contact() {
   return (
     <div className="pt-24 space-y-12 sm:space-y-16 md:space-y-20 pb-12 sm:pb-16 md:pb-20">
       <SEOHead
-        title="Contact Advait Digital — Bulk SMS & Digital Services Pune India"
+        title="Contact Us"
         description="Contact Advait Digital for bulk SMS, WhatsApp API, RCS messaging, voice call, and digital marketing services. Office at Amanora Chambers, Pune 411028. Call +91 8282982829."
         keywords="contact Advait Digital, Advait Digital Pune contact, bulk SMS company contact, digital marketing Pune contact, Amanora Chambers Pune, SMS service Pune phone number, WhatsApp API provider contact"
         canonical="/contact"
