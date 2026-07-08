@@ -43,6 +43,17 @@ export default function EnquiryModal() {
     return () => window.removeEventListener('open-enquiry-modal', handleOpen);
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen]);
+
   const handleClose = () => {
     setIsOpen(false);
     setIsDropdownOpen(false);
@@ -123,7 +134,7 @@ export default function EnquiryModal() {
           animate={{ opacity: 1, backdropFilter: 'blur(6px)' }}
           exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+          className="fixed inset-0 z-[3000] flex items-start justify-center overflow-y-auto bg-black/70 px-3 py-4 backdrop-blur-md sm:items-center sm:p-6 lg:p-8"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.8, rotateX: 15, y: 45 }}
@@ -136,7 +147,7 @@ export default function EnquiryModal() {
               mass: 0.85
             }}
             style={{ transformPerspective: 1200 }}
-            className="bg-white rounded-2xl shadow-2xl relative overflow-hidden border border-brand-charcoal/5 w-full max-w-[390px] text-brand-charcoal"
+            className="relative my-auto max-h-[calc(100vh-2rem)] w-full max-w-[min(92vw,390px)] overflow-y-auto rounded-2xl border border-brand-charcoal/5 bg-white text-brand-charcoal shadow-2xl sm:max-h-[calc(100vh-3rem)]"
           >
             {/* Top Accent Gradient Bar matching DemoForm */}
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-brand-orange via-brand-yellow to-brand-orange"></div>
@@ -144,13 +155,13 @@ export default function EnquiryModal() {
             {/* Close Cross Button */}
             <button
               onClick={handleClose}
-              className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-gray-100 hover:bg-brand-orange hover:text-white flex items-center justify-center text-gray-600 transition-all duration-200 cursor-pointer shadow-xs"
+              className="absolute right-3 top-3 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-600 shadow-xs transition-all duration-200 hover:bg-brand-orange hover:text-white sm:right-4 sm:top-4"
               aria-label="Close form"
             >
               <X size={18} weight="bold" />
             </button>
 
-            <div className="p-7 space-y-5">
+            <div className="space-y-4 p-5 sm:space-y-5 sm:p-7">
               {isSuccess ? (
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -191,7 +202,7 @@ export default function EnquiryModal() {
                   )}
 
                   {/* Form */}
-                  <form onSubmit={handleSubmit} className="space-y-4 text-left">
+                  <form onSubmit={handleSubmit} className="space-y-3.5 text-left sm:space-y-4">
                     {/* Name Field */}
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-brand-charcoal-light mb-1.5">
