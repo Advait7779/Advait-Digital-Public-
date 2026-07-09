@@ -36,3 +36,30 @@ model EmailTemplate {
 
   @@map("email_templates")
 }
+
+model AnalyticsVisit {
+  id          Int      @id @default(autoincrement())
+  ts          DateTime @default(now())
+  page        String
+  referrer    String?
+  utmSource   String?  @map("utm_source")
+  utmMedium   String?  @map("utm_medium")
+  utmCampaign String?  @map("utm_campaign")
+  device      String   @default("unknown")
+  browser     String   @default("unknown")
+  ipAddress   String?  @map("ip_address")
+  sessionId   String?  @map("session_id")
+
+  @@index([ts(sort: Desc)], map: "idx_analytics_visits_ts")
+  @@index([page], map: "idx_analytics_visits_page")
+  @@index([sessionId], map: "idx_analytics_visits_session")
+  @@map("analytics_visits")
+}
+
+model AnalyticsCounter {
+  key       String   @id
+  value     Int      @default(0)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("analytics_counters")
+}

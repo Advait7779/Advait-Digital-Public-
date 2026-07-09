@@ -1,26 +1,25 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { prisma } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const ANALYTICS_FILE = path.join(__dirname, 'analytics.json');
-const MAX_VISITS = 10000; // Keep last 10,000 visits in rolling log
+const BASE_OFFSET = Number.parseInt(process.env.ANALYTICS_BASE_OFFSET || '16000', 10);
+const MAX_RECENT_VISITS = Number.parseInt(process.env.ANALYTICS_RECENT_LIMIT || '10000', 10);
+const TOTAL_COUNTER_KEY = 'total_visits';
+const IST_OFFSET_MS = 330 * 60 * 1000;
+let cachedCounterBaseline = null;
 
-/**
- * Reads the analytics data file, returning { visits: [], totalCount: number }
- */
-function readData() {
-  const BASE_OFFSET = 16000;
+function readFileData() {
   try {
     if (!fs.existsSync(ANALYTICS_FILE)) {
       return { visits: [], totalCount: BASE_OFFSET };
     }
     const raw = fs.readFileSync(ANALYTICS_FILE, 'utf8');
     const data = JSON.parse(raw);
-    
-    // Ensure count is at least 16,000 if not set or lower
     if (!data.totalCount || data.totalCount < BASE_OFFSET) {
       data.totalCount = BASE_OFFSET;
     }
@@ -30,10 +29,7 @@ function readData() {
   }
 }
 
-/**
- * Writes the analytics data file atomically
- */
-function writeData(data) {
+function writeFileData(data) {
   try {
     fs.writeFileSync(ANALYTICS_FILE, JSON.stringify(data, null, 2), 'utf8');
   } catch (err) {
@@ -41,116 +37,175 @@ function writeData(data) {
   }
 }
 
-/**
- * Records a single visit entry
- * @param {Object} visitData
- */
-export function recordVisit(visitData) {
-  const data = readData();
+function recordVisitToFile(visitData) {
+  const data = readFileData();
+  const entry = buildVisitEntry(visitData);
 
-  const entry = {
-    ts: new Date().toISOString(),
-    page: visitData.page || '/',
-    referrer: visitData.referrer || '',
-    utm_source: visitData.utm_source || '',
-    utm_medium: visitData.utm_medium || '',
-    utm_campaign: visitData.utm_campaign || '',
-    device: visitData.device || 'unknown',
-    browser: visitData.browser || 'unknown',
-    ip: visitData.ip || '',
-    sessionId: visitData.sessionId || '',
-  };
+  data.totalCount = Math.max(data.totalCount || 0, BASE_OFFSET) + 1;
+  data.visits = [entry, ...(data.visits || [])].slice(0, MAX_RECENT_VISITS);
 
-  // Increment persistent total (never reset)
-  data.totalCount = (data.totalCount || 0) + 1;
-
-  // Keep rolling window of recent visits
-  data.visits = [entry, ...(data.visits || [])].slice(0, MAX_VISITS);
-
-  writeData(data);
+  writeFileData(data);
   return data.totalCount;
 }
 
-/**
- * Returns aggregated statistics
- */
-export function getStats() {
-  const data = readData();
-  const visits = data.visits || [];
-  const totalCount = data.totalCount || 0;
+function buildVisitEntry(visitData) {
+  return {
+    ts: new Date().toISOString(),
+    page: String(visitData.page || '/').slice(0, 300),
+    referrer: String(visitData.referrer || '').slice(0, 1000),
+    utm_source: String(visitData.utm_source || '').slice(0, 200),
+    utm_medium: String(visitData.utm_medium || '').slice(0, 200),
+    utm_campaign: String(visitData.utm_campaign || '').slice(0, 300),
+    device: String(visitData.device || 'unknown').slice(0, 50),
+    browser: String(visitData.browser || 'unknown').slice(0, 80),
+    ip: String(visitData.ip || '').slice(0, 80),
+    sessionId: String(visitData.sessionId || '').slice(0, 120),
+  };
+}
 
-  // Today's visits
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const todayCount = visits.filter(v => v.ts && v.ts.startsWith(todayStr)).length;
+async function getCounterBaseline() {
+  if (cachedCounterBaseline !== null) return cachedCounterBaseline;
+  const fileData = readFileData();
+  cachedCounterBaseline = Math.max(BASE_OFFSET, Number(fileData.totalCount || 0));
+  return cachedCounterBaseline;
+}
 
-  // This week
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const weekCount = visits.filter(v => v.ts && new Date(v.ts) >= weekAgo).length;
+function getIstDayStartUtc(now = new Date()) {
+  const istNow = new Date(now.getTime() + IST_OFFSET_MS);
+  return new Date(Date.UTC(
+    istNow.getUTCFullYear(),
+    istNow.getUTCMonth(),
+    istNow.getUTCDate()
+  ) - IST_OFFSET_MS);
+}
 
-  // Top pages
+function aggregateRecentVisits(visits) {
   const pageMap = {};
-  for (const v of visits) {
-    const p = v.page || '/';
-    pageMap[p] = (pageMap[p] || 0) + 1;
+  const refMap = {};
+  const deviceMap = {};
+  const utmMap = {};
+  const dailyMap = {};
+
+  for (let i = 6; i >= 0; i -= 1) {
+    const d = new Date(Date.now() + IST_OFFSET_MS - i * 24 * 60 * 60 * 1000);
+    dailyMap[d.toISOString().slice(0, 10)] = 0;
   }
+
+  for (const v of visits) {
+    const page = v.page || '/';
+    const referrer = v.referrer || '';
+    const device = v.device || 'unknown';
+    const source = v.utmSource || v.utm_source || '';
+    const day = new Date(new Date(v.ts).getTime() + IST_OFFSET_MS).toISOString().slice(0, 10);
+
+    pageMap[page] = (pageMap[page] || 0) + 1;
+    deviceMap[device] = (deviceMap[device] || 0) + 1;
+    if (referrer.trim()) refMap[referrer] = (refMap[referrer] || 0) + 1;
+    if (source) utmMap[source] = (utmMap[source] || 0) + 1;
+    if (day in dailyMap) dailyMap[day] += 1;
+  }
+
   const topPages = Object.entries(pageMap)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10)
     .map(([page, count]) => ({ page, count }));
 
-  // Top referrers (exclude empty / direct)
-  const refMap = {};
-  for (const v of visits) {
-    if (v.referrer && v.referrer.trim()) {
-      refMap[v.referrer] = (refMap[v.referrer] || 0) + 1;
-    }
-  }
   const topReferrers = Object.entries(refMap)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
     .map(([referrer, count]) => ({ referrer, count }));
 
-  // Device breakdown
-  const deviceMap = {};
-  for (const v of visits) {
-    const d = v.device || 'unknown';
-    deviceMap[d] = (deviceMap[d] || 0) + 1;
-  }
-  const deviceBreakdown = Object.entries(deviceMap).map(([device, count]) => ({ device, count }));
+  const deviceBreakdown = Object.entries(deviceMap)
+    .map(([device, count]) => ({ device, count }));
 
-  // UTM sources breakdown
-  const utmMap = {};
-  for (const v of visits) {
-    if (v.utm_source) {
-      utmMap[v.utm_source] = (utmMap[v.utm_source] || 0) + 1;
-    }
-  }
   const utmSources = Object.entries(utmMap)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10)
     .map(([source, count]) => ({ source, count }));
 
-  // Daily visits for last 7 days
-  const dailyMap = {};
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
-    dailyMap[d.toISOString().slice(0, 10)] = 0;
-  }
-  for (const v of visits) {
-    const day = (v.ts || '').slice(0, 10);
-    if (day in dailyMap) dailyMap[day]++;
-  }
-  const dailyVisits = Object.entries(dailyMap).map(([date, count]) => ({ date, count }));
+  const dailyVisits = Object.entries(dailyMap)
+    .map(([date, count]) => ({ date, count }));
 
-  return {
-    totalCount,
-    todayCount,
-    weekCount,
-    topPages,
-    topReferrers,
-    deviceBreakdown,
-    utmSources,
-    dailyVisits,
-    lastUpdated: new Date().toISOString(),
-  };
+  return { topPages, topReferrers, deviceBreakdown, utmSources, dailyVisits };
+}
+
+export async function recordVisit(visitData) {
+  const entry = buildVisitEntry(visitData);
+  const baseline = await getCounterBaseline();
+
+  try {
+    const [, counter] = await prisma.$transaction([
+      prisma.analyticsVisit.create({
+        data: {
+          ts: new Date(entry.ts),
+          page: entry.page,
+          referrer: entry.referrer || null,
+          utmSource: entry.utm_source || null,
+          utmMedium: entry.utm_medium || null,
+          utmCampaign: entry.utm_campaign || null,
+          device: entry.device,
+          browser: entry.browser,
+          ipAddress: entry.ip || null,
+          sessionId: entry.sessionId || null,
+        },
+      }),
+      prisma.analyticsCounter.upsert({
+        where: { key: TOTAL_COUNTER_KEY },
+        create: { key: TOTAL_COUNTER_KEY, value: baseline + 1 },
+        update: { value: { increment: 1 } },
+      }),
+    ]);
+
+    return counter.value;
+  } catch (err) {
+    console.error('[ERROR] [Analytics] DB visit record failed, using file fallback:', err.message);
+    return recordVisitToFile(visitData);
+  }
+}
+
+export async function getStats() {
+  try {
+    const todayStart = getIstDayStartUtc();
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const [counter, todayCount, weekCount, recentVisits] = await Promise.all([
+      prisma.analyticsCounter.findUnique({ where: { key: TOTAL_COUNTER_KEY } }),
+      prisma.analyticsVisit.count({ where: { ts: { gte: todayStart } } }),
+      prisma.analyticsVisit.count({ where: { ts: { gte: weekAgo } } }),
+      prisma.analyticsVisit.findMany({
+        orderBy: { ts: 'desc' },
+        take: MAX_RECENT_VISITS,
+        select: {
+          ts: true,
+          page: true,
+          referrer: true,
+          utmSource: true,
+          device: true,
+        },
+      }),
+    ]);
+
+    return {
+      totalCount: Math.max(counter?.value || 0, await getCounterBaseline()),
+      todayCount,
+      weekCount,
+      ...aggregateRecentVisits(recentVisits),
+      lastUpdated: new Date().toISOString(),
+    };
+  } catch (err) {
+    console.error('[ERROR] [Analytics] DB stats failed, using file fallback:', err.message);
+    const data = readFileData();
+    const visits = data.visits || [];
+    const todayStart = getIstDayStartUtc();
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recent = visits.map(v => ({ ...v, ts: v.ts ? new Date(v.ts) : new Date(0) }));
+
+    return {
+      totalCount: Math.max(data.totalCount || 0, BASE_OFFSET),
+      todayCount: recent.filter(v => v.ts >= todayStart).length,
+      weekCount: recent.filter(v => v.ts >= weekAgo).length,
+      ...aggregateRecentVisits(recent),
+      lastUpdated: new Date().toISOString(),
+    };
+  }
 }

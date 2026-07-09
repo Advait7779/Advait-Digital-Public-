@@ -6,7 +6,6 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
 import path from 'path';
-import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { recordVisit, getStats } from './analytics.js';
 import { prisma } from './db.js';
@@ -19,7 +18,14 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.set('trust proxy', 1);
+function parseTrustProxy(value = '1') {
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  const numeric = Number.parseInt(value, 10);
+  return Number.isFinite(numeric) ? numeric : 1;
+}
+
+app.set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY));
 
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://advaitdigital.co.in',
@@ -47,15 +53,20 @@ app.use(cors({
 app.use(express.json({ limit: '32kb' }));
 app.use(express.urlencoded({ extended: true, limit: '32kb' }));
 
+function numberEnv(name, fallback) {
+  const value = Number.parseInt(process.env[name] || '', 10);
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 600,
+  limit: numberEnv('API_RATE_LIMIT_PER_15_MIN', 3000),
   standardHeaders: true,
   legacyHeaders: false,
 });
 const leadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 20,
+  limit: numberEnv('LEAD_RATE_LIMIT_PER_15_MIN', 20),
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many enquiry attempts. Please try again later.' },
@@ -69,7 +80,7 @@ const adminLoginLimiter = rateLimit({
 });
 const adminLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 300,
+  limit: numberEnv('ADMIN_RATE_LIMIT_PER_15_MIN', 300),
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -181,8 +192,12 @@ app.get('/api/health', (req, res) => {
 /**
  * Helper to build SMTP Transporter
  */
+let smtpTransporter = null;
+
 function createSmtpTransporter() {
   const { SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS } = process.env;
+
+  if (smtpTransporter) return smtpTransporter;
 
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
     console.warn('[WARN] [Backend SMTP] Missing SMTP credentials in env:', {
@@ -196,15 +211,53 @@ function createSmtpTransporter() {
   // Remove any spaces from Google App Password
   const cleanPass = SMTP_PASS.replace(/\s+/g, '');
 
-  return nodemailer.createTransport({
+  smtpTransporter = nodemailer.createTransport({
     host: SMTP_HOST,
     port: parseInt(SMTP_PORT || '587', 10),
     secure: SMTP_SECURE === 'true',
+    pool: true,
+    maxConnections: numberEnv('SMTP_MAX_CONNECTIONS', 3),
+    maxMessages: numberEnv('SMTP_MAX_MESSAGES_PER_CONNECTION', 100),
     auth: {
       user: SMTP_USER,
       pass: cleanPass,
     },
   });
+
+  return smtpTransporter;
+}
+
+const BACKGROUND_JOB_CONCURRENCY = numberEnv('BACKGROUND_JOB_CONCURRENCY', 5);
+const BACKGROUND_JOB_MAX_QUEUE = numberEnv('BACKGROUND_JOB_MAX_QUEUE', 5000);
+const backgroundJobs = [];
+let activeBackgroundJobs = 0;
+
+function runBackgroundJobs() {
+  while (activeBackgroundJobs < BACKGROUND_JOB_CONCURRENCY && backgroundJobs.length > 0) {
+    const job = backgroundJobs.shift();
+    activeBackgroundJobs += 1;
+
+    Promise.resolve()
+      .then(job)
+      .catch(err => {
+        console.error('[ERROR] [Background] Job failed:', err.message);
+      })
+      .finally(() => {
+        activeBackgroundJobs -= 1;
+        runBackgroundJobs();
+      });
+  }
+}
+
+function enqueueBackgroundJob(job) {
+  if (backgroundJobs.length >= BACKGROUND_JOB_MAX_QUEUE) {
+    console.error('[ERROR] [Background] Queue is full. Skipping non-critical notification job.');
+    return false;
+  }
+
+  backgroundJobs.push(job);
+  setImmediate(runBackgroundJobs);
+  return true;
 }
 
 /**
@@ -500,8 +553,9 @@ app.post('/api/submit-lead', leadLimiter, async (req, res) => {
     message: 'Enquiry submitted successfully!'
   });
 
-  // Background processing: emails + WABA
-  setImmediate(async () => {
+  // Background processing: emails + WABA. The queue prevents spikes from
+  // creating unlimited SMTP/WABA work while keeping the form response fast.
+  enqueueBackgroundJob(async () => {
 
     // Legacy duplicate-save block removed from runtime.
     /*
@@ -529,19 +583,6 @@ app.post('/api/submit-lead', leadLimiter, async (req, res) => {
     // 2. Send admin notification email (existing behaviour)
     if (transporter) {
       try {
-        const logoPath = fs.existsSync(path.join(__dirname, '../frontend/public/favicon.png'))
-          ? path.join(__dirname, '../frontend/public/favicon.png')
-          : path.join(__dirname, 'favicon.png');
-
-        const attachments = [];
-        if (fs.existsSync(logoPath)) {
-          attachments.push({
-            filename: 'logo.png',
-            path: logoPath,
-            cid: 'advaitlogo'
-          });
-        }
-
         const userEmail = process.env.SMTP_USER || 'support@advaitteleservices.com';
         const rawFrom = (process.env.SMTP_FROM || '').trim();
         let smtpFrom = `"Advait Digital Website" <${userEmail}>`;
@@ -564,13 +605,12 @@ app.post('/api/submit-lead', leadLimiter, async (req, res) => {
         const adminMailOptions = {
           from: smtpFrom,
           to: process.env.NOTIFY_EMAIL || 'sales@advaitteleservices.com',
-          subject: `New Lead New Lead: ${name} (${service})`,
-          attachments,
+          subject: `New Lead: ${name} (${service})`,
           html: `
             <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-              <!-- Header with Embedded Brand Logo -->
+              <!-- Header with hosted brand logo -->
               <div style="background: #0f172a; padding: 28px 24px; text-align: center; border-bottom: 4px solid #ff6b00;">
-                <img src="cid:advaitlogo" alt="Advait Digital Logo" style="width: 72px; height: 72px; border-radius: 16px; margin-bottom: 12px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.3);" />
+                <img src="https://advaitdigital.co.in/favicon.png" alt="Advait Digital Logo" style="width: 72px; height: 72px; border-radius: 16px; margin-bottom: 12px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.3);" />
                 <h2 style="margin: 0; font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;">NEW LEAD RECEIVED</h2>
                 <p style="margin: 6px 0 0; font-size: 13px; color: #94a3b8; font-weight: 500;">Advait Digital Website Lead Alert</p>
               </div>
@@ -656,7 +696,7 @@ app.post('/api/submit-lead', leadLimiter, async (req, res) => {
 // ============================================================
 // ANALYTICS
 // ============================================================
-app.post('/api/analytics/visit', (req, res) => {
+app.post('/api/analytics/visit', async (req, res) => {
   try {
     if (String(req.body.page || '').startsWith('/admin')) {
       return res.json({ success: true, skipped: true });
@@ -666,7 +706,7 @@ app.post('/api/analytics/visit', (req, res) => {
       req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
       req.socket?.remoteAddress || '';
 
-    const count = recordVisit({ ...req.body, ip: visitorIp });
+    const count = await recordVisit({ ...req.body, ip: visitorIp });
     res.json({ success: true, totalCount: count });
   } catch (err) {
     console.error('[ERROR] [Analytics] visit record error:', err.message);
@@ -674,9 +714,9 @@ app.post('/api/analytics/visit', (req, res) => {
   }
 });
 
-app.get('/api/analytics/public-stats', (req, res) => {
+app.get('/api/analytics/public-stats', async (req, res) => {
   try {
-    const stats = getStats();
+    const stats = await getStats();
     res.json({
       totalCount: stats.totalCount,
       todayCount: stats.todayCount,
