@@ -307,54 +307,46 @@ function enqueueBackgroundJob(job) {
 }
 
 /**
- * Helper to send automated WhatsApp alert via WABA API (non-blocking)
+ * Helper to post lead to WABA API (non-blocking)
  */
-async function sendWabaAlert({ name, phone, email, service, sourceForm }) {
+async function sendWabaLead({ name, phone, email, service, sourceForm, message }) {
   const apiKey = process.env.WABA_API_KEY || '';
-  const targetNumber = process.env.WABA_TARGET_NUMBER || '919921968968';
+  
+  // Clean/construct the URL. If WABA_API_URL is set, use its origin.
+  const baseUrl = process.env.WABA_API_URL 
+    ? new URL(process.env.WABA_API_URL).origin 
+    : 'https://api.advaitdigital.co.in';
+  const url = `${baseUrl}/api/v1/leads`;
 
-  const messageText = 
-    `NEW LEAD - ADVAIT DIGITAL\n` +
-    `Name: ${name}\n` +
-    `Mobile: ${phone}\n` +
-    `Email: ${email || 'Not provided'}\n` +
-    `Service: ${service}`;
-
-  const payloadText = {
-    to: targetNumber,
-    recipient_type: 'individual',
-    type: 'text',
-    text: { body: messageText }
+  const payload = {
+    name,
+    phone,
+    email: email || '',
+    service: service || '',
+    message: message || '',
+    sourceForm: sourceForm || 'Website Form'
   };
 
-  const payloadVendor = {
-    number: targetNumber,
-    message: messageText
-  };
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': apiKey
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(5000)
+    });
 
-  const endpoints = [
-    { url: 'https://waba.advaitdigital.co.in/api/v1/messages', headers: { 'Authorization': `Bearer ${apiKey}`, 'x-api-key': apiKey }, body: payloadText },
-    { url: 'https://waba.advaitdigital.co.in/api/v1/send', headers: { 'Authorization': `Bearer ${apiKey}`, 'x-api-key': apiKey }, body: payloadVendor },
-    { url: 'https://waba.advaitdigital.co.in/api/messages', headers: { 'Authorization': `Bearer ${apiKey}`, 'x-api-key': apiKey }, body: payloadText },
-    { url: 'https://waba.360dialog.io/v1/messages', headers: { 'D360-API-KEY': apiKey }, body: payloadText }
-  ];
-
-  for (const ep of endpoints) {
-    try {
-      const resp = await fetch(ep.url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...ep.headers },
-        body: JSON.stringify(ep.body),
-        signal: AbortSignal.timeout(3000)
-      });
-
-      if (resp.ok) {
-        console.log(`[OK] [Backend WABA] Alert sent successfully via ${ep.url}`);
-        return true;
-      }
-    } catch {
-      // Ignore network errors in background
+    if (resp.ok) {
+      console.log(`[OK] [Backend WABA] Lead sent successfully to ${url}`);
+      return true;
+    } else {
+      const errText = await resp.text();
+      console.error(`[ERROR] [Backend WABA] Failed to send lead to ${url}. Status: ${resp.status}, Response: ${errText}`);
     }
+  } catch (err) {
+    console.error(`[ERROR] [Backend WABA] Network error sending lead to ${url}:`, err.message);
   }
 
   return false;
@@ -924,8 +916,8 @@ app.post('/api/submit-lead', leadLimiter, async (req, res) => {
       }
     }
 
-    // 4. Dispatch WABA Alert
-    await sendWabaAlert({ name, phone, email, service, sourceForm });
+    // 4. Dispatch WABA Lead
+    await sendWabaLead({ name, phone, email, service, sourceForm, message });
   });
 });
 

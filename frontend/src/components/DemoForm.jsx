@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PaperPlaneTilt, CheckCircle, Spinner } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
-import { sendWhatsAppLeadAlert } from '../services/whatsappService';
 import { submitLead } from '../services/api';
 
 export default function DemoForm({ defaultService = '' }) {
@@ -92,11 +91,6 @@ export default function DemoForm({ defaultService = '' }) {
       });
 
       setIsSuccess(true);
-
-      // Trigger pre-filled WhatsApp redirect to +91 9921968968 after 1 second
-      setTimeout(() => {
-        sendWhatsAppLeadAlert(submittedLead);
-      }, 1000);
 
       setFormData({
         name: '',
