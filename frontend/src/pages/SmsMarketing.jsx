@@ -121,12 +121,7 @@ export default function SmsMarketing() {
             "provider": { "@type": "Organization", "name": "Advait Digital", "url": "https://advaitdigital.co.in" },
             "areaServed": "India",
             "description": "High-delivery bulk SMS marketing — promotional, transactional, and OTP SMS campaigns with DLT compliance across India.",
-            "url": "https://advaitdigital.co.in/services/sms-marketing",
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.9",
-              "reviewCount": "184"
-            }
+            "url": "https://advaitdigital.co.in/services/sms-marketing"
           },
           {
             "@context": "https://schema.org",

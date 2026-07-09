@@ -90,12 +90,7 @@ export default function WhatsappApi() {
             "provider": { "@type": "Organization", "name": "Advait Digital", "url": "https://advaitdigital.co.in" },
             "areaServed": "India",
             "description": "Official WhatsApp Business API integration for automating customer communication, chatbots, and transactional notifications.",
-            "url": "https://advaitdigital.co.in/services/whatsapp-api",
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.9",
-              "reviewCount": "210"
-            }
+            "url": "https://advaitdigital.co.in/services/whatsapp-api"
           },
           {
             "@context": "https://schema.org",

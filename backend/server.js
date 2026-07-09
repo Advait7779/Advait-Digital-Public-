@@ -58,6 +58,23 @@ function numberEnv(name, fallback) {
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
+function booleanEnv(name, fallback) {
+  const value = String(process.env[name] || '').trim().toLowerCase();
+  if (!value) return fallback;
+  return ['1', 'true', 'yes', 'on'].includes(value);
+}
+
+function isValidEmail(value = '') {
+  return /\S+@\S+\.\S+/.test(String(value).trim());
+}
+
+const REMINDER_EMAIL_ENABLED = booleanEnv('REMINDER_EMAIL_ENABLED', true);
+const REMINDER_EMAIL_DELAY_HOURS = numberEnv('REMINDER_EMAIL_DELAY_HOURS', 48);
+const REMINDER_EMAIL_CHECK_INTERVAL_MINUTES = numberEnv('REMINDER_EMAIL_CHECK_INTERVAL_MINUTES', 15);
+const REMINDER_EMAIL_BATCH_SIZE = numberEnv('REMINDER_EMAIL_BATCH_SIZE', 25);
+const REMINDER_EMAIL_MAX_ATTEMPTS = numberEnv('REMINDER_EMAIL_MAX_ATTEMPTS', 3);
+const REMINDER_EMAIL_LOCK_MINUTES = numberEnv('REMINDER_EMAIL_LOCK_MINUTES', 30);
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: numberEnv('API_RATE_LIMIT_PER_15_MIN', 3000),
@@ -225,6 +242,16 @@ function createSmtpTransporter() {
   });
 
   return smtpTransporter;
+}
+
+function getSmtpFrom(displayName = 'Advait Digital') {
+  const userEmail = process.env.SMTP_USER || 'sales@advaitteleservices.com';
+  const rawFrom = (process.env.SMTP_FROM || '').trim();
+
+  if (rawFrom.includes('<') && rawFrom.includes('>')) return rawFrom;
+  if (rawFrom.includes('@')) return `"${displayName}" <${rawFrom}>`;
+
+  return `"${displayName}" <${userEmail}>`;
 }
 
 const BACKGROUND_JOB_CONCURRENCY = numberEnv('BACKGROUND_JOB_CONCURRENCY', 5);
@@ -491,6 +518,191 @@ async function buildThankYouEmail({ name, phone, service }) {
   }
 }
 
+function buildReminderEmail({ name, phone, service }) {
+  const safeName = escapeHtml(name || 'there');
+  const safePhone = escapeHtml(phone || 'Not provided');
+  const safeService = escapeHtml(service || 'your selected service');
+
+  return {
+    subject: `Quick Reminder: Your ${service || 'Service'} Enquiry with Advait Digital`,
+    attachments: [],
+    html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advait Digital Reminder</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f2f1e5;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f2f1e5;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+          <tr>
+            <td style="background:#2c2927;padding:32px 40px;text-align:center;border-bottom:4px solid #f36308;">
+              <img src="https://advaitdigital.co.in/favicon.png" alt="Advait Digital" width="64" height="64" style="border-radius:14px;margin-bottom:16px;display:block;margin-left:auto;margin-right:auto;" />
+              <h1 style="margin:0;font-size:26px;font-weight:800;color:#ffffff;letter-spacing:0.3px;">Advait Digital</h1>
+              <p style="margin:6px 0 0;font-size:12px;color:#f36308;font-weight:700;text-transform:uppercase;letter-spacing:2px;">Enquiry Follow-up</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:40px 40px 32px;">
+              <h2 style="margin:0 0 10px;font-size:22px;font-weight:800;color:#2c2927;">Hello ${safeName},</h2>
+              <p style="margin:0 0 18px;font-size:15px;color:#3d3936;line-height:1.7;">
+                You recently enquired with Advait Digital about <strong>${safeService}</strong>. This is a gentle reminder that our team is ready to help you explore the right communication solution for your campaign or business.
+              </p>
+              <table cellpadding="0" cellspacing="0" width="100%" style="background:#fbfbf7;border:1px solid #eee8da;border-radius:14px;margin:24px 0;">
+                <tr>
+                  <td style="padding:18px 20px;">
+                    <p style="margin:0 0 12px;font-size:13px;color:#f36308;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;">Your Enquiry Details</p>
+                    <p style="margin:0 0 8px;font-size:14px;color:#2c2927;line-height:1.6;"><strong>Service:</strong> ${safeService}</p>
+                    <p style="margin:0;font-size:14px;color:#2c2927;line-height:1.6;"><strong>Mobile:</strong> ${safePhone}</p>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0 0 24px;font-size:15px;color:#3d3936;line-height:1.7;">
+                If you have already connected with our team, please ignore this reminder. Otherwise, you can reply to this email or contact us for quick assistance.
+              </p>
+              <div style="margin:30px 0 0;text-align:center;">
+                <a href="https://advaitdigital.co.in" style="display:inline-block;background:#f36308;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:14px 34px;border-radius:50px;letter-spacing:0.3px;">Visit Our Website</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#fbfbf7;padding:24px 40px;border-top:1px solid #f2f1e5;">
+              <p style="margin:0;font-size:12px;color:#3d3936;line-height:1.8;">
+                <strong style="color:#2c2927;">Advait Digital</strong><br />
+                Office No. 522, 5th Floor, Amanora Chambers, Amanora Town Centre, Pune - 411028<br />
+                Phone: <a href="tel:+918282982829" style="color:#f36308;text-decoration:none;">+91 82829 82829</a> &nbsp;|&nbsp;
+                Email: <a href="mailto:sales@advaitteleservices.com" style="color:#f36308;text-decoration:none;">sales@advaitteleservices.com</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#2c2927;padding:16px 40px;text-align:center;">
+              <p style="margin:0;font-size:11px;color:#94a3b8;">
+                You are receiving this reminder because you submitted an enquiry on the Advait Digital website.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+  };
+}
+
+async function sendReminderEmailForLead(lead) {
+  if (!isValidEmail(lead.email)) return false;
+
+  const transporter = createSmtpTransporter();
+  if (!transporter) {
+    throw new Error('SMTP transporter is not configured');
+  }
+
+  const reminder = buildReminderEmail({
+    name: lead.name,
+    phone: lead.phone,
+    service: lead.service,
+  });
+
+  await transporter.sendMail({
+    from: getSmtpFrom('Advait Digital'),
+    to: lead.email,
+    subject: reminder.subject,
+    html: reminder.html,
+    attachments: reminder.attachments,
+  });
+
+  return true;
+}
+
+let reminderProcessorRunning = false;
+
+async function processReminderEmails() {
+  if (!REMINDER_EMAIL_ENABLED || reminderProcessorRunning) return;
+
+  reminderProcessorRunning = true;
+
+  try {
+    const now = new Date();
+    const staleLockCutoff = new Date(now.getTime() - REMINDER_EMAIL_LOCK_MINUTES * 60 * 1000);
+    const claimableReminderWhere = {
+      email: { not: null },
+      reminderDueAt: { lte: now },
+      reminderSentAt: null,
+      reminderAttempts: { lt: REMINDER_EMAIL_MAX_ATTEMPTS },
+      OR: [
+        { reminderLockedAt: null },
+        { reminderLockedAt: { lt: staleLockCutoff } },
+      ],
+    };
+
+    const dueLeads = await prisma.lead.findMany({
+      where: claimableReminderWhere,
+      orderBy: { reminderDueAt: 'asc' },
+      take: REMINDER_EMAIL_BATCH_SIZE,
+    });
+
+    for (const lead of dueLeads) {
+      const claim = await prisma.lead.updateMany({
+        where: {
+          id: lead.id,
+          ...claimableReminderWhere,
+        },
+        data: {
+          reminderLockedAt: now,
+          reminderAttempts: { increment: 1 },
+          reminderLastError: null,
+        },
+      });
+
+      if (claim.count !== 1) continue;
+
+      const queued = enqueueBackgroundJob(async () => {
+        try {
+          await sendReminderEmailForLead(lead);
+          await prisma.lead.update({
+            where: { id: lead.id },
+            data: {
+              reminderSentAt: new Date(),
+              reminderLockedAt: null,
+              reminderLastError: null,
+            },
+          });
+          console.log(`[OK] [Reminder] Email sent to ${lead.email}`);
+        } catch (err) {
+          const message = normalizeText(err.message || 'Reminder email failed', 500);
+          await prisma.lead.update({
+            where: { id: lead.id },
+            data: {
+              reminderLockedAt: null,
+              reminderLastError: message,
+            },
+          });
+          console.error(`[ERROR] [Reminder] Failed for lead ${lead.id}: ${message}`);
+        }
+      });
+
+      if (!queued) {
+        await prisma.lead.update({
+          where: { id: lead.id },
+          data: {
+            reminderLockedAt: null,
+            reminderLastError: 'Background queue is full',
+          },
+        });
+      }
+    }
+  } catch (err) {
+    console.error('[ERROR] [Reminder] Processor failed:', err.message);
+  } finally {
+    reminderProcessorRunning = false;
+  }
+}
+
 /**
  * Admin auth middleware - validates Bearer token from ADMIN_SECRET env
  */
@@ -519,9 +731,14 @@ app.post('/api/submit-lead', leadLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Name, phone, and service are required fields.' });
   }
 
-  if (email && email !== 'Not provided' && !/\S+@\S+\.\S+/.test(email)) {
+  if (email && email !== 'Not provided' && !isValidEmail(email)) {
     return res.status(400).json({ error: 'Please provide a valid email address.' });
   }
+
+  const customerEmail = email && email !== 'Not provided' && isValidEmail(email) ? email : null;
+  const reminderDueAt = REMINDER_EMAIL_ENABLED && customerEmail
+    ? new Date(Date.now() + REMINDER_EMAIL_DELAY_HOURS * 60 * 60 * 1000)
+    : null;
 
   const visitorIp =
     req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
@@ -535,11 +752,12 @@ app.post('/api/submit-lead', leadLimiter, async (req, res) => {
       data: {
         name,
         phone,
-        email: email && email !== 'Not provided' ? email : null,
+        email: customerEmail,
         service,
         message: message || null,
         sourceForm,
         ipAddress: visitorIp || null,
+        reminderDueAt,
       }
     });
     console.log(`[DB] Lead saved for ${name} (${phone})`);
@@ -662,8 +880,7 @@ app.post('/api/submit-lead', leadLimiter, async (req, res) => {
       }
 
       // 3. Send Thank You email to customer (only if they provided an email)
-      const customerEmail = (email || '').trim();
-      if (customerEmail && /\S+@\S+\.\S+/.test(customerEmail)) {
+      if (customerEmail) {
         try {
           const tmpl = await buildThankYouEmail({ name, phone, service });
           if (tmpl) {
@@ -1004,4 +1221,10 @@ app.put('/api/admin/template', requireAdmin, async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`[START] Advait Digital Backend API Server running on port ${PORT}`);
+  if (REMINDER_EMAIL_ENABLED) {
+    const intervalMs = REMINDER_EMAIL_CHECK_INTERVAL_MINUTES * 60 * 1000;
+    console.log(`[START] Reminder emails enabled. Checking every ${REMINDER_EMAIL_CHECK_INTERVAL_MINUTES} minutes.`);
+    setTimeout(processReminderEmails, 30 * 1000);
+    setInterval(processReminderEmails, intervalMs);
+  }
 });

@@ -165,12 +165,7 @@ export default function VoiceCall() {
             "provider": { "@type": "Organization", "name": "Advait Digital", "url": "https://advaitdigital.co.in" },
             "areaServed": "India",
             "description": "Automated bulk voice call and IVR broadcasting for marketing, election campaigns, and customer notifications.",
-            "url": "https://advaitdigital.co.in/services/voice-call",
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.8",
-              "reviewCount": "128"
-            }
+            "url": "https://advaitdigital.co.in/services/voice-call"
           },
           {
             "@context": "https://schema.org",

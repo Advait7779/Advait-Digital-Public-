@@ -42,12 +42,7 @@ export default function RcsMessaging() {
             "provider": { "@type": "Organization", "name": "Advait Digital", "url": "https://advaitdigital.co.in" },
             "areaServed": "India",
             "description": "Verified RCS messaging campaigns with rich media, carousels, and branded sender profiles.",
-            "url": "https://advaitdigital.co.in/services/rcs",
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.8",
-              "reviewCount": "96"
-            }
+            "url": "https://advaitdigital.co.in/services/rcs"
           },
           {
             "@context": "https://schema.org",

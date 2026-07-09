@@ -263,12 +263,7 @@ export default function WebDev() {
             "provider": { "@type": "Organization", "name": "Advait Digital", "url": "https://advaitdigital.co.in" },
             "areaServed": "India",
             "description": "Professional website design and development services in Pune — responsive, SEO-friendly, and custom-built.",
-            "url": "https://advaitdigital.co.in/services/web-dev",
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.9",
-              "reviewCount": "154"
-            }
+            "url": "https://advaitdigital.co.in/services/web-dev"
           },
           {
             "@context": "https://schema.org",

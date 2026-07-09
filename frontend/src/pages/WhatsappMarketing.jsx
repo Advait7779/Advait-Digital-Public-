@@ -114,12 +114,7 @@ export default function WhatsappMarketing() {
             "provider": { "@type": "Organization", "name": "Advait Digital", "url": "https://advaitdigital.co.in" },
             "areaServed": "India",
             "description": "Bulk WhatsApp marketing campaigns with rich media, broadcast lists, and automated chatbot flows.",
-            "url": "https://advaitdigital.co.in/services/whatsapp-marketing",
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.8",
-              "reviewCount": "142"
-            }
+            "url": "https://advaitdigital.co.in/services/whatsapp-marketing"
           },
           {
             "@context": "https://schema.org",

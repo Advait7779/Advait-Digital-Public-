@@ -8,22 +8,29 @@ generator client {
 }
 
 model Lead {
-  id         Int      @id @default(autoincrement())
-  name       String
-  phone      String
-  email      String?
-  service    String?
-  message    String?
-  sourceForm String   @default("Website Form") @map("source_form")
-  status     String   @default("New")
-  ipAddress  String?  @map("ip_address")
-  notes      String?
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
+  id                Int       @id @default(autoincrement())
+  name              String
+  phone             String
+  email             String?
+  service           String?
+  message           String?
+  sourceForm        String    @default("Website Form") @map("source_form")
+  status            String    @default("New")
+  ipAddress         String?   @map("ip_address")
+  notes             String?
+  reminderDueAt     DateTime? @map("reminder_due_at")
+  reminderSentAt    DateTime? @map("reminder_sent_at")
+  reminderAttempts  Int       @default(0) @map("reminder_attempts")
+  reminderLastError String?   @map("reminder_last_error")
+  reminderLockedAt  DateTime? @map("reminder_locked_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at")
 
   @@index([status], map: "idx_leads_status")
   @@index([createdAt(sort: Desc)], map: "idx_leads_created_at")
   @@index([phone], map: "idx_leads_phone")
+  @@index([reminderDueAt], map: "idx_leads_reminder_due_at")
+  @@index([reminderSentAt], map: "idx_leads_reminder_sent_at")
   @@map("leads")
 }
 

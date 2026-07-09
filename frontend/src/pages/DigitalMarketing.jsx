@@ -101,12 +101,7 @@ export default function DigitalMarketing() {
             "provider": { "@type": "Organization", "name": "Advait Digital", "url": "https://advaitdigital.co.in" },
             "areaServed": "India",
             "description": "Full-service digital marketing including SEO, social media, Google Ads, and ROI-driven lead generation.",
-            "url": "https://advaitdigital.co.in/services/digital-marketing",
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.9",
-              "reviewCount": "165"
-            }
+            "url": "https://advaitdigital.co.in/services/digital-marketing"
           },
           {
             "@context": "https://schema.org",

@@ -129,12 +129,7 @@ export default function ElectionSms() {
             "provider": { "@type": "Organization", "name": "Advait Digital", "url": "https://advaitdigital.co.in" },
             "areaServed": "India",
             "description": "Bulk SMS, voice call, and WhatsApp services for political campaigns and election voter outreach.",
-            "url": "https://advaitdigital.co.in/services/election-sms",
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.9",
-              "reviewCount": "115"
-            }
+            "url": "https://advaitdigital.co.in/services/election-sms"
           },
           {
             "@context": "https://schema.org",
