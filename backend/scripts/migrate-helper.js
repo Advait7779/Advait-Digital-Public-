@@ -48,13 +48,13 @@ async function run() {
     // Check 20260707120000_init
     if (hasLeads && !appliedMigrations.includes('20260707120000_init')) {
       console.log('[Migrate Helper] Table "leads" exists but "20260707120000_init" is not registered. Baselining...');
-      execSync('npx prisma migrate resolve --applied 20260707120000_init', { cwd: backendDir, stdio: 'inherit', env });
+      execSync('npx --no-install prisma migrate resolve --applied 20260707120000_init', { cwd: backendDir, stdio: 'inherit', env });
     }
 
     // Check 20260709090000_analytics_visits
     if (hasAnalyticsVisits && !appliedMigrations.includes('20260709090000_analytics_visits')) {
       console.log('[Migrate Helper] Table "analytics_visits" exists but "20260709090000_analytics_visits" is not registered. Baselining...');
-      execSync('npx prisma migrate resolve --applied 20260709090000_analytics_visits', { cwd: backendDir, stdio: 'inherit', env });
+      execSync('npx --no-install prisma migrate resolve --applied 20260709090000_analytics_visits', { cwd: backendDir, stdio: 'inherit', env });
     }
 
     // Check 20260709100000_lead_reminders (column check)
@@ -65,7 +65,7 @@ async function run() {
       const hasReminderDueAt = colRes.length > 0;
       if (hasReminderDueAt && !appliedMigrations.includes('20260709100000_lead_reminders')) {
         console.log('[Migrate Helper] Column "reminder_due_at" exists in "leads" but "20260709100000_lead_reminders" is not registered. Baselining...');
-        execSync('npx prisma migrate resolve --applied 20260709100000_lead_reminders', { cwd: backendDir, stdio: 'inherit', env });
+        execSync('npx --no-install prisma migrate resolve --applied 20260709100000_lead_reminders', { cwd: backendDir, stdio: 'inherit', env });
       }
     }
 
@@ -77,7 +77,7 @@ async function run() {
 
   // Finally, run deploy to make sure everything is in sync and any new migrations are applied
   console.log('[Migrate Helper] Running final migrate deploy...');
-  execSync('npx prisma migrate deploy', { cwd: path.join(__dirname, '..'), stdio: 'inherit', env });
+  execSync('npx --no-install prisma migrate deploy', { cwd: path.join(__dirname, '..'), stdio: 'inherit', env });
 }
 
 run().catch(err => {

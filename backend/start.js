@@ -13,7 +13,7 @@ console.log('[START] Preparing Prisma client and database migrations...');
 
 try {
   const env = prismaEnv();
-  execSync('npx prisma generate', { cwd: __dirname, stdio: 'inherit', env });
+  execSync('npx --no-install prisma generate', { cwd: __dirname, stdio: 'inherit', env });
   execSync('node scripts/migrate-helper.js', { cwd: __dirname, stdio: 'inherit', env });
   process.env.PRISMA_MIGRATIONS_READY = 'true';
   console.log('[START] Prisma is ready.');
