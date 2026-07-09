@@ -1,4 +1,4 @@
-import pkg from 'pg';
+import { PrismaClient } from '@prisma/client';
 import { prismaEnv } from './prisma-env.js';
 import { execSync } from 'child_process';
 import path from 'path';
@@ -8,28 +8,25 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const env = prismaEnv();
-const { Pool } = pkg;
 
-const pool = new Pool({
-  connectionString: env.DATABASE_URL
+// Instantiate PrismaClient with the built DATABASE_URL
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: env.DATABASE_URL
+    }
+  }
 });
 
 async function run() {
-  console.log('[Migrate Helper] Connecting to database to check schema...');
-  let client;
-  try {
-    client = await pool.connect();
-  } catch (err) {
-    console.error('[Migrate Helper] Failed to connect to database:', err.message);
-    process.exit(1);
-  }
-
+  console.log('[Migrate Helper] Connecting to database via Prisma to check schema...');
+  
   try {
     // 1. Get all existing tables
-    const tableRes = await client.query(
+    const tableRes = await prisma.$queryRawUnsafe(
       "SELECT table_name FROM information_schema.tables WHERE table_schema='public'"
     );
-    const tables = tableRes.rows.map(r => r.table_name);
+    const tables = tableRes.map(r => r.table_name);
     console.log('[Migrate Helper] Existing tables in database:', tables.join(', ') || '(none)');
 
     const hasLeads = tables.includes('leads');
@@ -39,8 +36,10 @@ async function run() {
     // Helper to check if a migration is already in _prisma_migrations
     let appliedMigrations = [];
     if (hasMigrationsTable) {
-      const migRes = await client.query("SELECT migration_name FROM _prisma_migrations WHERE finished_at IS NOT NULL");
-      appliedMigrations = migRes.rows.map(r => r.migration_name);
+      const migRes = await prisma.$queryRawUnsafe(
+        "SELECT migration_name FROM _prisma_migrations WHERE finished_at IS NOT NULL"
+      );
+      appliedMigrations = migRes.map(r => r.migration_name);
     }
     console.log('[Migrate Helper] Already registered migrations:', appliedMigrations.join(', ') || '(none)');
 
@@ -60,10 +59,10 @@ async function run() {
 
     // Check 20260709100000_lead_reminders (column check)
     if (hasLeads) {
-      const colRes = await client.query(
+      const colRes = await prisma.$queryRawUnsafe(
         "SELECT column_name FROM information_schema.columns WHERE table_name = 'leads' AND column_name = 'reminder_due_at'"
       );
-      const hasReminderDueAt = colRes.rows.length > 0;
+      const hasReminderDueAt = colRes.length > 0;
       if (hasReminderDueAt && !appliedMigrations.includes('20260709100000_lead_reminders')) {
         console.log('[Migrate Helper] Column "reminder_due_at" exists in "leads" but "20260709100000_lead_reminders" is not registered. Baselining...');
         execSync('npx prisma migrate resolve --applied 20260709100000_lead_reminders', { cwd: backendDir, stdio: 'inherit', env });
@@ -73,8 +72,7 @@ async function run() {
   } catch (err) {
     console.error('[Migrate Helper] Error during auto-baselining check:', err.message);
   } finally {
-    await client.release();
-    await pool.end();
+    await prisma.$disconnect();
   }
 
   // Finally, run deploy to make sure everything is in sync and any new migrations are applied
