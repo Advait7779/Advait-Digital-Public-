@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 export function buildDatabaseUrl(env = process.env) {
   if (env.DATABASE_URL) return env.DATABASE_URL;
 
