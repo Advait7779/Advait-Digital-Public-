@@ -15,6 +15,7 @@ try {
   const env = prismaEnv();
   execSync('npx prisma generate', { cwd: __dirname, stdio: 'inherit', env });
   execSync('npx prisma migrate deploy', { cwd: __dirname, stdio: 'inherit', env });
+  process.env.PRISMA_MIGRATIONS_READY = 'true';
   console.log('[START] Prisma is ready.');
 } catch (error) {
   console.error('[ERROR] Prisma startup preparation failed:', error.message);

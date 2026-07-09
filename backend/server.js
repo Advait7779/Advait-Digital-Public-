@@ -7,8 +7,10 @@ import dotenv from 'dotenv';
 import crypto from 'crypto';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 import { recordVisit, getStats } from './analytics.js';
 import { prisma } from './db.js';
+import { prismaEnv } from './scripts/prisma-env.js';
 
 dotenv.config();
 
@@ -17,6 +19,23 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+function prepareDatabase() {
+  if (process.env.PRISMA_MIGRATIONS_READY === 'true') return;
+
+  console.log('[START] Preparing Prisma client and database migrations...');
+
+  try {
+    const env = prismaEnv();
+    execSync('npx prisma generate', { cwd: __dirname, stdio: 'inherit', env });
+    execSync('npx prisma migrate deploy', { cwd: __dirname, stdio: 'inherit', env });
+    process.env.PRISMA_MIGRATIONS_READY = 'true';
+    console.log('[START] Prisma is ready.');
+  } catch (error) {
+    console.error('[ERROR] Prisma startup preparation failed:', error.message);
+    process.exit(1);
+  }
+}
 
 function parseTrustProxy(value = '1') {
   if (value === 'true') return true;
@@ -1218,6 +1237,8 @@ app.put('/api/admin/template', requireAdmin, async (req, res) => {
     res.status(500).json({ error: 'Could not update template' });
   }
 });
+
+prepareDatabase();
 
 app.listen(PORT, () => {
   console.log(`[START] Advait Digital Backend API Server running on port ${PORT}`);
