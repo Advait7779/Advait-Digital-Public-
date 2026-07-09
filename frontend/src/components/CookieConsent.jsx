@@ -95,48 +95,52 @@ export default function CookieConsent({ onConsent }) {
               {/* Mobile Sheet Backdrop */}
               <motion.div
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 0.5 }}
+                animate={{ opacity: 0.6 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[9990] bg-black"
+                className="fixed inset-0 z-[9990] bg-black/40 backdrop-blur-sm"
                 onClick={() => setShowCustomize(false)}
               />
 
-              {/* Mobile Truecaller-style Bottom Sheet */}
+              {/* Mobile Truecaller-style Bottom Sheet (Dark Glassmorphic Theme) */}
               <motion.div
                 initial={{ y: '100%' }}
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-                className="fixed bottom-0 left-0 right-0 z-[9991] bg-white rounded-t-[24px] shadow-[0_-8px_32px_rgba(0,0,0,0.15)] p-5 pb-7 overflow-y-auto max-h-[92vh] text-left border-t border-slate-100"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(15,23,42,0.99) 0%, rgba(30,41,59,0.99) 100%)',
+                  backdropFilter: 'blur(24px)',
+                }}
+                className="fixed bottom-0 left-0 right-0 z-[9991] rounded-t-[24px] shadow-[0_-8px_32px_rgba(0,0,0,0.5)] p-5 pb-7 overflow-y-auto max-h-[92vh] text-left border-t border-white/8"
                 role="dialog"
                 aria-label="Cookie consent modal"
               >
-                <div className="w-12 h-1 bg-slate-200 rounded-full mx-auto mb-4" />
+                <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-4" />
                 
-                <h3 className="text-xl font-bold text-slate-900 leading-tight mb-3">
+                <h3 className="text-xl font-bold text-white leading-tight mb-3">
                   We use cookies on this website
                 </h3>
                 
-                <div className="text-xs text-slate-600 leading-relaxed mb-4">
+                <div className="text-xs text-white/70 leading-relaxed mb-4">
                   When you visit our website, we use necessary cookies to make our site work. With your consent, we’ll also use:
-                  <ul className="list-disc pl-5 space-y-1.5 my-2.5 text-slate-700">
+                  <ul className="list-disc pl-5 space-y-1.5 my-2.5 text-white/85">
                     <li>
-                      <span className="text-blue-600 font-semibold underline cursor-pointer" onClick={() => setShowCustomize(true)}>
+                      <span className="text-brand-orange font-semibold underline cursor-pointer" onClick={() => setShowCustomize(true)}>
                         Analytics cookies
                       </span> to understand how our site is used and improve it.
                     </li>
                     <li>
-                      <span className="text-blue-600 font-semibold underline cursor-pointer" onClick={() => setShowCustomize(true)}>
+                      <span className="text-brand-orange font-semibold underline cursor-pointer" onClick={() => setShowCustomize(true)}>
                         Marketing cookies
                       </span> to measure the effectiveness of our campaigns and tailor content to your interests.
                     </li>
                     <li>
-                      <span className="text-blue-600 font-semibold underline cursor-pointer" onClick={() => setShowCustomize(true)}>
+                      <span className="text-brand-orange font-semibold underline cursor-pointer" onClick={() => setShowCustomize(true)}>
                         Advertising cookies
                       </span> from our partners to show you ads that are more relevant and to limit how often you see them.
                     </li>
                   </ul>
-                  You have the right to withdraw your consent at any time. You can change your cookie preferences at any time by clicking on "Edit Cookie Settings" available at the bottom of any page. For more detailed information about the cookies we use, see our <a href="/terms-and-conditions" className="text-blue-600 font-semibold underline">🍪 Cookie Policy</a>.
+                  You have the right to withdraw your consent at any time. You can change your cookie preferences at any time by clicking on "Edit Cookie Settings" available at the bottom of any page. For more detailed information about the cookies we use, see our <a href="/terms-and-conditions" className="text-brand-orange font-semibold underline">🍪 Cookie Policy</a>.
                 </div>
 
                 <AnimatePresence>
@@ -145,13 +149,13 @@ export default function CookieConsent({ onConsent }) {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="mb-4 bg-slate-50 border border-slate-100 rounded-xl p-3.5 space-y-2 overflow-hidden"
+                      className="mb-4 bg-white/5 border border-white/8 rounded-xl p-3.5 space-y-2 overflow-hidden"
                     >
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Manage Preferences</p>
+                      <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Manage Preferences</p>
                       
                       <CookieToggle
-                        theme="light"
-                        icon={<ShieldCheck size={14} weight="fill" className="text-emerald-500" />}
+                        theme="dark"
+                        icon={<ShieldCheck size={14} weight="fill" className="text-emerald-400" />}
                         label="Essential Cookies"
                         description="Required for the site to work."
                         checked={true}
@@ -159,8 +163,8 @@ export default function CookieConsent({ onConsent }) {
                       />
                       
                       <CookieToggle
-                        theme="light"
-                        icon={<ChartBar size={14} weight="fill" className="text-blue-500" />}
+                        theme="dark"
+                        icon={<ChartBar size={14} weight="fill" className="text-blue-400" />}
                         label="Analytics Cookies"
                         description="To help us measure traffic."
                         checked={prefs.analytics}
@@ -168,8 +172,8 @@ export default function CookieConsent({ onConsent }) {
                       />
                       
                       <CookieToggle
-                        theme="light"
-                        icon={<Megaphone size={14} weight="fill" className="text-blue-500" />}
+                        theme="dark"
+                        icon={<Megaphone size={14} weight="fill" className="text-brand-orange" />}
                         label="Marketing Cookies"
                         description="Used for relevant campaigns."
                         checked={prefs.marketing}
@@ -178,7 +182,7 @@ export default function CookieConsent({ onConsent }) {
                       
                       <button
                         onClick={handleSaveCustom}
-                        className="w-full py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                        className="w-full py-2.5 rounded-full bg-brand-orange hover:bg-amber-500 text-white text-xs font-bold transition-colors cursor-pointer"
                       >
                         Save Settings
                       </button>
@@ -189,19 +193,19 @@ export default function CookieConsent({ onConsent }) {
                 <div className="flex flex-col gap-2.5">
                   <button
                     onClick={() => setShowCustomize(p => !p)}
-                    className="py-2.5 rounded-full border border-blue-600 text-blue-600 text-xs font-semibold text-center hover:bg-blue-50/30 transition-all cursor-pointer bg-transparent"
+                    className="py-2.5 rounded-full border border-brand-orange text-brand-orange text-xs font-semibold text-center hover:bg-brand-orange/10 transition-all cursor-pointer bg-transparent"
                   >
                     Edit Cookie Settings
                   </button>
                   <button
                     onClick={handleEssentialOnly}
-                    className="py-2.5 rounded-full border border-blue-600 text-blue-600 text-xs font-semibold text-center hover:bg-blue-50/30 transition-all cursor-pointer bg-transparent"
+                    className="py-2.5 rounded-full border border-brand-orange text-brand-orange text-xs font-semibold text-center hover:bg-brand-orange/10 transition-all cursor-pointer bg-transparent"
                   >
                     Accept Necessary Cookies
                   </button>
                   <button
                     onClick={handleAcceptAll}
-                    className="py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold text-center transition-all cursor-pointer"
+                    className="py-2.5 rounded-full bg-brand-orange hover:bg-amber-500 text-white text-xs font-bold text-center transition-all cursor-pointer"
                   >
                     Accept All Cookies
                   </button>
