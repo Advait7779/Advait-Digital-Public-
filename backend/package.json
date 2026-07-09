@@ -7,7 +7,7 @@
     "start": "node start.js",
     "dev": "node --watch server.js",
     "db:generate": "prisma generate",
-    "db:migrate": "node scripts/with-prisma-env.js prisma migrate deploy",
+    "db:migrate": "node scripts/migrate-helper.js",
     "db:migrate:dev": "node scripts/with-prisma-env.js prisma migrate dev",
     "db:validate": "node scripts/with-prisma-env.js prisma validate",
     "db:seed": "node prisma/seed.js",
