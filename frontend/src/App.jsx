@@ -21,6 +21,7 @@ const SmsMarketing = lazy(() => import('./pages/SmsMarketing'));
 const WhatsappApi = lazy(() => import('./pages/WhatsappApi'));
 const VoiceCall = lazy(() => import('./pages/VoiceCall'));
 const TermsConditions = lazy(() => import('./pages/TermsConditions'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const Careers = lazy(() => import('./pages/Careers'));
 const Admin = lazy(() => import('./pages/Admin'));
 
@@ -95,6 +96,7 @@ export default function App() {
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/terms-and-conditions" element={<TermsConditions />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="/careers" element={<Careers />} />
                   
                   {/* 8 Digital Services Routes */}

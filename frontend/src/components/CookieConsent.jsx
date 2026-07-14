@@ -140,7 +140,7 @@ export default function CookieConsent({ onConsent }) {
                       </span> from our partners to show you ads that are more relevant and to limit how often you see them.
                     </li>
                   </ul>
-                  You have the right to withdraw your consent at any time. You can change your cookie preferences at any time by clicking on "Edit Cookie Settings" available at the bottom of any page. For more detailed information about the cookies we use, see our <a href="/terms-and-conditions" className="text-brand-orange font-semibold underline">🍪 Cookie Policy</a>.
+                  You have the right to withdraw your consent at any time. You can change your cookie preferences at any time by clicking on "Edit Cookie Settings" available at the bottom of any page. For more detailed information about the cookies we use, see our <a href="/privacy-policy" className="text-brand-orange font-semibold underline">🍪 Cookie Policy</a>.
                 </div>
 
                 <AnimatePresence>

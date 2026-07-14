@@ -289,7 +289,7 @@ export default function DemoForm({ defaultService = '' }) {
                     className="mt-1 h-4 w-4 rounded border-brand-charcoal/10 text-brand-orange focus:ring-brand-orange/20 focus:border-brand-orange transition duration-200 cursor-pointer shrink-0"
                   />
                   <label htmlFor="consent" className="text-xs text-brand-charcoal-light/95 leading-relaxed select-none cursor-pointer">
-                    I hereby authorise to send notifications on SMS/Messages/WhatsApp/Promotional/RCS/Information Messages by clicking Sign Up, you agree to our <Link to="/terms-and-conditions" className="text-brand-orange hover:underline font-semibold">Terms of Services</Link> and then you have Read Our Privacy Policy. <span className="text-brand-orange font-bold">*</span>
+                    I hereby authorise to send notifications on SMS/Messages/WhatsApp/Promotional/RCS/Information Messages by clicking Sign Up, you agree to our <Link to="/terms-and-conditions" className="text-brand-orange hover:underline font-semibold">Terms of Services</Link> and then you have read our <Link to="/privacy-policy" className="text-brand-orange hover:underline font-semibold">Privacy Policy</Link>. <span className="text-brand-orange font-bold">*</span>
                   </label>
                 </div>
                 {errors.consent && <p className="text-brand-orange text-xs mt-1">{errors.consent}</p>}
