@@ -226,6 +226,49 @@ app.get('/api/health', (req, res) => {
 });
 
 /**
+ * SMTP diagnostic endpoint (admin-protected)
+ * GET /api/smtp-debug?key=<ADMIN_SECRET>
+ */
+app.get('/api/smtp-debug', async (req, res) => {
+  const adminSecret = process.env.ADMIN_SECRET || '';
+  if (!adminSecret || req.query.key !== adminSecret) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  const { SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, SMTP_FROM, NOTIFY_EMAIL } = process.env;
+
+  const report = {
+    SMTP_HOST: SMTP_HOST || null,
+    SMTP_PORT: SMTP_PORT || null,
+    SMTP_SECURE: SMTP_SECURE || null,
+    SMTP_USER: SMTP_USER || null,
+    SMTP_PASS: SMTP_PASS ? `SET (${SMTP_PASS.length} chars, first4=${SMTP_PASS.slice(0,4)})` : 'NOT SET',
+    SMTP_FROM: SMTP_FROM || null,
+    NOTIFY_EMAIL: NOTIFY_EMAIL || null,
+    allEnvKeys: Object.keys(process.env).filter(k => k.startsWith('SMTP') || k === 'NOTIFY_EMAIL'),
+  };
+
+  // Try a real SMTP verify
+  let verifyResult = 'skipped — missing credentials';
+  if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
+    try {
+      const testTransporter = nodemailer.createTransport({
+        host: SMTP_HOST,
+        port: parseInt(SMTP_PORT || '587', 10),
+        secure: SMTP_SECURE === 'true',
+        auth: { user: SMTP_USER, pass: SMTP_PASS.replace(/\s+/g, '') },
+      });
+      await testTransporter.verify();
+      verifyResult = 'SUCCESS — SMTP connection verified!';
+    } catch (e) {
+      verifyResult = `FAILED — ${e.message}`;
+    }
+  }
+
+  return res.json({ report, verifyResult });
+});
+
+/**
  * Helper to build SMTP Transporter
  */
 let smtpTransporter = null;
