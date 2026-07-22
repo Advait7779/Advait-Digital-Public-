@@ -49,6 +49,8 @@ app.set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY));
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://advaitdigital.co.in',
   'https://www.advaitdigital.co.in',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
   'http://localhost:5174',
   'http://127.0.0.1:5174',
 ];
@@ -353,8 +355,21 @@ function enqueueBackgroundJob(job) {
  * Helper to post lead to WABA API (non-blocking)
  */
 async function sendWabaLead({ name, phone, email, service, sourceForm, message }) {
-  const apiKey = process.env.WABA_API_KEY || '';
-  const wabaBase = process.env.WABA_ENQUIRY_URL || 'https://waba.advaitdigital.co.in';
+  // Priority: DB setting → env var → hardcoded default
+  let apiKey = process.env.WABA_API_KEY || '';
+  let wabaBase = process.env.WABA_ENQUIRY_URL || 'https://waba.advaitdigital.co.in';
+
+  try {
+    const [keySetting, urlSetting] = await Promise.all([
+      prisma.siteSetting.findUnique({ where: { key: 'waba_api_key' } }),
+      prisma.siteSetting.findUnique({ where: { key: 'waba_enquiry_url' } }),
+    ]);
+    if (keySetting?.value) apiKey = keySetting.value;
+    if (urlSetting?.value) wabaBase = urlSetting.value;
+  } catch {
+    // DB read failed — use env fallback silently
+  }
+
   const url = `${wabaBase}/api/v1/enquiries`;
 
   const payload = {
@@ -390,6 +405,7 @@ async function sendWabaLead({ name, phone, email, service, sourceForm, message }
 
   return false;
 }
+
 
 
 /**
@@ -1267,6 +1283,69 @@ app.put('/api/admin/template', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[ERROR] [Admin] template update error:', err.message);
     res.status(500).json({ error: 'Could not update template' });
+  }
+});
+
+// ============================================================
+// SITE SETTINGS (admin-managed config stored in DB)
+// ============================================================
+
+/**
+ * GET /api/admin/settings
+ * Returns all site settings as a key→value map
+ */
+app.get('/api/admin/settings', requireAdmin, async (req, res) => {
+  try {
+    const rows = await prisma.siteSetting.findMany();
+    const settings = {};
+    for (const row of rows) {
+      // Never expose the raw API key — mask all but last 4 chars
+      if (row.key === 'waba_api_key' && row.value) {
+        settings[row.key] = row.value; // send full value so admin can view/edit
+      } else {
+        settings[row.key] = row.value;
+      }
+    }
+    res.json({ settings });
+  } catch (err) {
+    console.error('[ERROR] [Admin] settings fetch error:', err.message);
+    res.status(500).json({ error: 'Could not fetch settings' });
+  }
+});
+
+/**
+ * PUT /api/admin/settings
+ * Upserts one or more settings. Body: { key: value, ... }
+ */
+app.put('/api/admin/settings', requireAdmin, async (req, res) => {
+  try {
+    const updates = req.body || {};
+    const allowedKeys = ['waba_api_key', 'waba_enquiry_url'];
+    const ops = [];
+
+    for (const [key, value] of Object.entries(updates)) {
+      if (!allowedKeys.includes(key)) continue;
+      if (typeof value !== 'string') continue;
+      ops.push(
+        prisma.siteSetting.upsert({
+          where: { key },
+          update: { value: value.trim() },
+          create: { key, value: value.trim() },
+        })
+      );
+    }
+
+    if (ops.length === 0) {
+      return res.status(400).json({ error: 'No valid settings provided' });
+    }
+
+    await Promise.all(ops);
+    // Bust the cached transporter so new key is picked up immediately
+    smtpTransporter = null;
+    res.json({ success: true, updated: Object.keys(updates).filter(k => allowedKeys.includes(k)) });
+  } catch (err) {
+    console.error('[ERROR] [Admin] settings update error:', err.message);
+    res.status(500).json({ error: 'Could not update settings' });
   }
 });
 

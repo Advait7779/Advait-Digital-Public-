@@ -202,6 +202,12 @@ const Icon = {
       <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
     </svg>
   ),
+  Settings: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  ),
 };
 
 // ─── Custom Dropdowns ────────────────────────────────────────────────────────
@@ -1250,6 +1256,138 @@ function TemplateView({ token }) {
   );
 }
 
+// ─── Settings View ───────────────────────────────────────────────────────────
+function SettingsView({ token }) {
+  const [settings, setSettings]   = useState({ waba_api_key: '', waba_enquiry_url: '' });
+  const [loading,  setLoading]    = useState(true);
+  const [saving,   setSaving]     = useState(false);
+  const [saved,    setSaved]      = useState(false);
+  const [error,    setError]      = useState('');
+  const [showKey,  setShowKey]    = useState(false);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/admin/settings`, { headers: authHeaders(token) })
+      .then(r => r.json())
+      .then(data => {
+        setSettings({
+          waba_api_key:     data.settings?.waba_api_key     || '',
+          waba_enquiry_url: data.settings?.waba_enquiry_url || 'https://waba.advaitdigital.co.in',
+        });
+      })
+      .catch(() => setError('Could not load settings'))
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true); setError(''); setSaved(false);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/settings`, {
+        method: 'PUT',
+        headers: authHeaders(token),
+        body: JSON.stringify(settings),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Save failed');
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return (
+    <div className="space-y-4">
+      {[...Array(2)].map((_, i) => <div key={i} className="h-20 rounded-2xl bg-gray-100 animate-pulse" />)}
+    </div>
+  );
+
+  return (
+    <div className="max-w-2xl">
+      <div className="mb-6">
+        <h2 className="text-xl font-black text-[#2c2927]">Integration Settings</h2>
+        <p className="text-sm text-gray-500 font-semibold mt-1">Manage your WABA API credentials. Changes take effect immediately — no redeployment needed.</p>
+      </div>
+
+      <form onSubmit={handleSave} className="space-y-5">
+
+        {/* WABA API Key */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center text-green-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+              </svg>
+            </div>
+            <div>
+              <p className="font-black text-[#2c2927] text-sm">WABA API Key</p>
+              <p className="text-xs text-gray-400 font-semibold">Used as <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">X-API-Key</code> header when sending enquiries to WABA</p>
+            </div>
+          </div>
+          <div className="relative">
+            <input
+              type={showKey ? 'text' : 'password'}
+              value={settings.waba_api_key}
+              onChange={e => setSettings(s => ({ ...s, waba_api_key: e.target.value }))}
+              placeholder="sk_live_xxxxxxxxxxxxxxxx"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#f36308]/30 focus:border-[#f36308] transition pr-12 bg-gray-50"
+            />
+            <button
+              type="button"
+              onClick={() => setShowKey(v => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition cursor-pointer"
+            >
+              {showKey ? (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+
+
+
+        {/* Info box */}
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3">
+          <span className="text-amber-500 text-lg mt-0.5">ℹ️</span>
+          <div className="text-xs text-amber-700 font-semibold leading-relaxed">
+            When a new enquiry is submitted on the website, this WABA API Key is used to authenticate and forward the lead to your WABA system. Database settings override environment variables instantly — no redeployment required.
+          </div>
+        </div>
+
+        {/* Feedback */}
+        {error && (
+          <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm font-bold flex items-center gap-2">
+            ⚠️ {error}
+          </div>
+        )}
+        {saved && (
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-bold flex items-center gap-2">
+            ✅ Settings saved successfully! Changes are live immediately.
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={saving}
+          className="bg-[#f36308] hover:bg-[#d95507] active:scale-[0.98] text-white font-black px-8 py-3.5 rounded-xl transition-all shadow-lg shadow-[#f36308]/20 disabled:opacity-60 cursor-pointer text-sm tracking-wide"
+        >
+          {saving ? 'Saving…' : 'Save Settings'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 // ─── Sidebar Nav Item ─────────────────────────────────────────────────────────
 function NavItem({ id, label, IconComp, active, onClick, count, collapsed }) {
   return (
@@ -1313,12 +1451,14 @@ export default function Admin() {
     { id: 'dashboard', label: 'Dashboard',      IconComp: Icon.Dashboard },
     { id: 'leads',     label: 'Leads',           IconComp: Icon.Leads,    count: stats ? +stats.new_leads : undefined },
     { id: 'template',  label: 'Email Template',  IconComp: Icon.Template  },
+    { id: 'settings',  label: 'Settings',        IconComp: Icon.Settings  },
   ];
 
   const PAGE_TITLES = {
     dashboard: 'Dashboard',
     leads:     'Lead Management',
     template:  'Email Template',
+    settings:  'Settings',
   };
 
   const sidebarContent = (
@@ -1407,9 +1547,10 @@ export default function Admin() {
         {/* Page content */}
         <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
           <div key={activeTab} className="animate-in fade-in duration-300 ease-out">
-            {activeTab === 'dashboard' && <DashboardView token={token} />}
-            {activeTab === 'leads'     && <LeadsView     token={token} />}
-            {activeTab === 'template'  && <TemplateView  token={token} />}
+            {activeTab === 'dashboard' && <DashboardView  token={token} />}
+            {activeTab === 'leads'     && <LeadsView      token={token} />}
+            {activeTab === 'template'  && <TemplateView   token={token} />}
+            {activeTab === 'settings'  && <SettingsView   token={token} />}
           </div>
         </main>
       </div>

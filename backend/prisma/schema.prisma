@@ -70,3 +70,11 @@ model AnalyticsCounter {
 
   @@map("analytics_counters")
 }
+
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("site_settings")
+}
