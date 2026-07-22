@@ -354,20 +354,16 @@ function enqueueBackgroundJob(job) {
  */
 async function sendWabaLead({ name, phone, email, service, sourceForm, message }) {
   const apiKey = process.env.WABA_API_KEY || '';
-  
-  // Clean/construct the URL. If WABA_API_URL is set, use its origin.
-  const baseUrl = process.env.WABA_API_URL 
-    ? new URL(process.env.WABA_API_URL).origin 
-    : 'https://api.advaitdigital.co.in';
-  const url = `${baseUrl}/api/v1/leads`;
+  const wabaBase = process.env.WABA_ENQUIRY_URL || 'https://waba.advaitdigital.co.in';
+  const url = `${wabaBase}/api/v1/enquiries`;
 
   const payload = {
-    name,
-    phone,
-    email: email || '',
-    service: service || '',
+    name:    name    || '',
+    phone:   phone   || '',
+    email:   email   || '',
+    service: service || 'default',
     message: message || '',
-    sourceForm: sourceForm || 'Website Form'
+    source:  sourceForm || 'website'
   };
 
   try {
@@ -378,22 +374,23 @@ async function sendWabaLead({ name, phone, email, service, sourceForm, message }
         'X-API-Key': apiKey
       },
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(5000)
+      signal: AbortSignal.timeout(8000)
     });
 
     if (resp.ok) {
-      console.log(`[OK] [Backend WABA] Lead sent successfully to ${url}`);
+      console.log(`[OK] [Backend WABA] Enquiry sent successfully to ${url}`);
       return true;
     } else {
       const errText = await resp.text();
-      console.error(`[ERROR] [Backend WABA] Failed to send lead to ${url}. Status: ${resp.status}, Response: ${errText}`);
+      console.error(`[ERROR] [Backend WABA] Failed to send enquiry to ${url}. Status: ${resp.status}, Response: ${errText}`);
     }
   } catch (err) {
-    console.error(`[ERROR] [Backend WABA] Network error sending lead to ${url}:`, err.message);
+    console.error(`[ERROR] [Backend WABA] Network error sending enquiry to ${url}:`, err.message);
   }
 
   return false;
 }
+
 
 /**
  * Compile JSON email configuration to standard responsive HTML
