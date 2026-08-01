@@ -260,7 +260,15 @@ async function syncLeadWithWebhook(lead, webhookUrl, webhookSecret) {
   try {
     payload = text ? JSON.parse(text) : {};
   } catch {
-    throw new Error(`Google Apps Script returned a non-JSON response (${response.status}).`);
+    const plainText = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (/Script function not found:\s*doPost/i.test(plainText)) {
+      throw new Error(
+        'Google Apps Script deployment does not contain doPost. Paste googleAppsScriptWebhook.gs and deploy a new web-app version.'
+      );
+    }
+    throw new Error(
+      `Google Apps Script returned a non-JSON response (${response.status}): ${plainText.slice(0, 300) || 'empty response'}`
+    );
   }
 
   if (!response.ok || payload.success !== true) {

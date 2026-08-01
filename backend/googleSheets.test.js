@@ -43,6 +43,28 @@ test('lead sync uses the configured Apps Script webhook', async () => {
   }
 });
 
+test('lead sync explains an Apps Script deployment missing doPost', async () => {
+  process.env.GOOGLE_SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/old-deployment/exec';
+  process.env.GOOGLE_SHEETS_WEBHOOK_SECRET = 'test-webhook-secret';
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(
+    '<html><body>Script function not found: doPost</body></html>',
+    { status: 200, headers: { 'Content-Type': 'text/html' } }
+  );
+
+  try {
+    const { syncLeadToGoogleSheet } = await import(`./googleSheets.js?missing-do-post=${Date.now()}`);
+    await assert.rejects(
+      () => syncLeadToGoogleSheet({ id: 99, createdAt: new Date() }),
+      /does not contain doPost/
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    delete process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+    delete process.env.GOOGLE_SHEETS_WEBHOOK_SECRET;
+  }
+});
+
 test('lead sync appends once and updates the same row on retry', async () => {
   delete process.env.GOOGLE_SHEETS_WEBHOOK_URL;
   delete process.env.GOOGLE_SHEETS_WEBHOOK_SECRET;

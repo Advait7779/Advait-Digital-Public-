@@ -421,10 +421,25 @@ async function processPendingSheetSync() {
 /**
  * Helper to post lead to WABA API (non-blocking)
  */
+function normalizeWabaEnquiryBase(value = '') {
+  const fallback = 'https://api.advaitdigital.co.in';
+  const raw = String(value || fallback).trim();
+
+  try {
+    const parsed = new URL(raw);
+    if (parsed.hostname.toLowerCase() === 'waba.advaitdigital.co.in') {
+      return fallback;
+    }
+    return raw.replace(/\/+$/, '');
+  } catch {
+    return fallback;
+  }
+}
+
 async function sendWabaLead({ name, phone, email, service, sourceForm, message }) {
   // Priority: DB setting → env var → hardcoded default
   let apiKey = process.env.WABA_API_KEY || '';
-  let wabaBase = process.env.WABA_ENQUIRY_URL || 'https://waba.advaitdigital.co.in';
+  let wabaBase = process.env.WABA_ENQUIRY_URL || 'https://api.advaitdigital.co.in';
 
   try {
     const [keySetting, urlSetting] = await Promise.all([
@@ -437,6 +452,7 @@ async function sendWabaLead({ name, phone, email, service, sourceForm, message }
     // DB read failed — use env fallback silently
   }
 
+  wabaBase = normalizeWabaEnquiryBase(wabaBase);
   const url = `${wabaBase}/api/v1/enquiries`;
 
   const payload = {
