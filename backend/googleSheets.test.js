@@ -2,7 +2,50 @@ import assert from 'node:assert/strict';
 import { generateKeyPairSync } from 'node:crypto';
 import test from 'node:test';
 
+test('lead sync uses the configured Apps Script webhook', async () => {
+  process.env.GOOGLE_SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/test-deployment/exec';
+  process.env.GOOGLE_SHEETS_WEBHOOK_SECRET = 'test-webhook-secret';
+  delete process.env.GOOGLE_SHEETS_CLIENT_EMAIL;
+  delete process.env.GOOGLE_SHEETS_PRIVATE_KEY;
+  delete process.env.GOOGLE_SHEETS_PRIVATE_KEY_BASE64;
+
+  const originalFetch = globalThis.fetch;
+  let sentPayload;
+  globalThis.fetch = async (url, options = {}) => {
+    assert.equal(String(url), process.env.GOOGLE_SHEETS_WEBHOOK_URL);
+    assert.equal(options.method, 'POST');
+    sentPayload = JSON.parse(options.body);
+    return Response.json({ success: true, action: 'appended', rowNumber: 2 });
+  };
+
+  try {
+    const { syncLeadToGoogleSheet } = await import(`./googleSheets.js?webhook-test=${Date.now()}`);
+    const result = await syncLeadToGoogleSheet({
+      id: 51,
+      name: 'Webhook Lead',
+      phone: '+919999999999',
+      email: 'lead@example.com',
+      service: 'Website Design',
+      sourceForm: 'Website Form',
+      status: 'New',
+      message: 'Please call',
+      createdAt: new Date('2026-08-01T10:00:00.000Z'),
+    });
+
+    assert.equal(result.action, 'appended');
+    assert.equal(sentPayload.secret, 'test-webhook-secret');
+    assert.equal(sentPayload.id, 51);
+    assert.equal(sentPayload.name, 'Webhook Lead');
+  } finally {
+    globalThis.fetch = originalFetch;
+    delete process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+    delete process.env.GOOGLE_SHEETS_WEBHOOK_SECRET;
+  }
+});
+
 test('lead sync appends once and updates the same row on retry', async () => {
+  delete process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+  delete process.env.GOOGLE_SHEETS_WEBHOOK_SECRET;
   const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
   process.env.GOOGLE_SHEETS_CLIENT_EMAIL = 'sheet-sync@example.iam.gserviceaccount.com';
   process.env.GOOGLE_SHEETS_PRIVATE_KEY = privateKey.export({ type: 'pkcs8', format: 'pem' });

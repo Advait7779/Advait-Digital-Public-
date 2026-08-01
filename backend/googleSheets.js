@@ -37,6 +37,8 @@ function getConfig() {
     : normalizePrivateKey(process.env.GOOGLE_SHEETS_PRIVATE_KEY);
 
   return {
+    webhookUrl: String(process.env.GOOGLE_SHEETS_WEBHOOK_URL || '').trim(),
+    webhookSecret: String(process.env.GOOGLE_SHEETS_WEBHOOK_SECRET || '').trim(),
     clientEmail,
     privateKey,
     spreadsheetId: String(
@@ -47,8 +49,10 @@ function getConfig() {
 }
 
 export function isGoogleSheetsSyncConfigured() {
-  const { clientEmail, privateKey, spreadsheetId, sheetName } = getConfig();
-  return Boolean(clientEmail && privateKey && spreadsheetId && sheetName);
+  const { webhookUrl, webhookSecret, clientEmail, privateKey, spreadsheetId, sheetName } = getConfig();
+  const webhookConfigured = Boolean(webhookUrl && webhookSecret);
+  const serviceAccountConfigured = Boolean(clientEmail && privateKey && spreadsheetId && sheetName);
+  return webhookConfigured || serviceAccountConfigured;
 }
 
 function encodeJwtPart(value) {
@@ -189,7 +193,7 @@ function leadRow(lead) {
   ];
 }
 
-async function upsertLead(lead) {
+async function upsertLeadWithServiceAccount(lead) {
   const { spreadsheetId, sheetName } = getConfig();
   await ensureLeadHeaders();
 
@@ -218,8 +222,67 @@ async function upsertLead(lead) {
   return { action: 'appended', updatedRange: result?.updates?.updatedRange || null };
 }
 
+async function syncLeadWithWebhook(lead, webhookUrl, webhookSecret) {
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(webhookUrl);
+  } catch {
+    throw new Error('GOOGLE_SHEETS_WEBHOOK_URL is not a valid URL.');
+  }
+
+  if (parsedUrl.protocol !== 'https:' || parsedUrl.hostname !== 'script.google.com') {
+    throw new Error('GOOGLE_SHEETS_WEBHOOK_URL must be an HTTPS script.google.com Apps Script URL.');
+  }
+
+  const response = await fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      secret: webhookSecret,
+      id: lead.id,
+      name: lead.name || '',
+      phone: lead.phone || '',
+      email: lead.email || '',
+      service: lead.service || '',
+      sourceForm: lead.sourceForm || 'Website Form',
+      status: lead.status || 'New',
+      message: lead.message || '',
+      createdAt: lead.createdAt instanceof Date
+        ? lead.createdAt.toISOString()
+        : new Date(lead.createdAt).toISOString(),
+    }),
+    redirect: 'follow',
+    signal: AbortSignal.timeout(20_000),
+  });
+
+  const text = await response.text();
+  let payload;
+  try {
+    payload = text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error(`Google Apps Script returned a non-JSON response (${response.status}).`);
+  }
+
+  if (!response.ok || payload.success !== true) {
+    throw new Error(
+      `Google Apps Script webhook failed (${response.status}): ${payload.error || response.statusText || 'unknown error'}`
+    );
+  }
+
+  return {
+    action: payload.action || 'synced',
+    rowNumber: payload.rowNumber || null,
+  };
+}
+
 export function syncLeadToGoogleSheet(lead) {
-  const operation = sheetOperationQueue.then(() => upsertLead(lead));
+  const { webhookUrl, webhookSecret } = getConfig();
+  const operation = sheetOperationQueue.then(() => {
+    if (webhookUrl && webhookSecret) {
+      return syncLeadWithWebhook(lead, webhookUrl, webhookSecret);
+    }
+    return upsertLeadWithServiceAccount(lead);
+  });
   sheetOperationQueue = operation.catch(() => undefined);
   return operation;
 }
