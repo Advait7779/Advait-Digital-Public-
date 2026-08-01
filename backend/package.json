@@ -6,7 +6,6 @@
   "scripts": {
     "start": "node start.js",
     "dev": "node --watch server.js",
-    "test": "node --test googleSheets.test.js",
     "db:generate": "prisma generate",
     "db:migrate": "node scripts/migrate-helper.js",
     "db:migrate:dev": "node scripts/with-prisma-env.js prisma migrate dev",
