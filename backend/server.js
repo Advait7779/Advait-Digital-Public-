@@ -11,6 +11,7 @@ import { execSync } from 'child_process';
 import { recordVisit, getStats } from './analytics.js';
 import { prisma } from './db.js';
 import { prismaEnv } from './scripts/prisma-env.js';
+import { isGoogleSheetsSyncConfigured, syncLeadToGoogleSheet } from './googleSheets.js';
 
 dotenv.config();
 
@@ -95,6 +96,9 @@ const REMINDER_EMAIL_CHECK_INTERVAL_MINUTES = numberEnv('REMINDER_EMAIL_CHECK_IN
 const REMINDER_EMAIL_BATCH_SIZE = numberEnv('REMINDER_EMAIL_BATCH_SIZE', 25);
 const REMINDER_EMAIL_MAX_ATTEMPTS = numberEnv('REMINDER_EMAIL_MAX_ATTEMPTS', 3);
 const REMINDER_EMAIL_LOCK_MINUTES = numberEnv('REMINDER_EMAIL_LOCK_MINUTES', 30);
+const GOOGLE_SHEETS_SYNC_INTERVAL_MINUTES = numberEnv('GOOGLE_SHEETS_SYNC_INTERVAL_MINUTES', 5);
+const GOOGLE_SHEETS_SYNC_BATCH_SIZE = numberEnv('GOOGLE_SHEETS_SYNC_BATCH_SIZE', 100);
+const GOOGLE_SHEETS_SYNC_MAX_ATTEMPTS = numberEnv('GOOGLE_SHEETS_SYNC_MAX_ATTEMPTS', 20);
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -349,6 +353,69 @@ function enqueueBackgroundJob(job) {
   backgroundJobs.push(job);
   setImmediate(runBackgroundJobs);
   return true;
+}
+
+async function syncLeadToSheetById(leadId) {
+  if (!isGoogleSheetsSyncConfigured()) return false;
+
+  const lead = await prisma.lead.findUnique({ where: { id: leadId } });
+  if (!lead) return false;
+
+  try {
+    const result = await syncLeadToGoogleSheet(lead);
+    await prisma.lead.update({
+      where: { id: leadId },
+      data: {
+        sheetSyncedAt: new Date(),
+        sheetSyncAttempts: 0,
+        sheetSyncError: null,
+      },
+    });
+    console.log(`[OK] [Google Sheets] Lead ${leadId} ${result.action}.`);
+    return true;
+  } catch (error) {
+    await prisma.lead.update({
+      where: { id: leadId },
+      data: {
+        sheetSyncAttempts: { increment: 1 },
+        sheetSyncError: String(error.message || error).slice(0, 2000),
+      },
+    }).catch(updateError => {
+      console.error(`[ERROR] [Google Sheets] Could not record sync failure for lead ${leadId}:`, updateError.message);
+    });
+    throw error;
+  }
+}
+
+let sheetSyncWorkerRunning = false;
+
+async function processPendingSheetSync() {
+  if (!isGoogleSheetsSyncConfigured() || sheetSyncWorkerRunning) return;
+  sheetSyncWorkerRunning = true;
+
+  try {
+    const pendingLeads = await prisma.lead.findMany({
+      where: {
+        sheetSyncedAt: null,
+        sheetSyncAttempts: { lt: GOOGLE_SHEETS_SYNC_MAX_ATTEMPTS },
+      },
+      select: { id: true },
+      orderBy: { id: 'asc' },
+      take: GOOGLE_SHEETS_SYNC_BATCH_SIZE,
+    });
+
+    for (const lead of pendingLeads) {
+      try {
+        await syncLeadToSheetById(lead.id);
+      } catch (error) {
+        console.error(`[ERROR] [Google Sheets] Lead ${lead.id} sync failed:`, error.message);
+      }
+    }
+  } catch (error) {
+    console.error('[ERROR] [Google Sheets] Pending sync worker failed:', error.message);
+  } finally {
+    sheetSyncWorkerRunning = false;
+  }
 }
 
 /**
@@ -814,8 +881,9 @@ app.post('/api/submit-lead', leadLimiter, async (req, res) => {
   console.log(`[Lead] Instant lead received from ${name} (${phone}) - Service: ${service}`);
 
   // Save the lead before returning success so CMS tracking stays reliable.
+  let createdLead;
   try {
-    await prisma.lead.create({
+    createdLead = await prisma.lead.create({
       data: {
         name,
         phone,
@@ -832,6 +900,8 @@ app.post('/api/submit-lead', leadLimiter, async (req, res) => {
     console.error('[ERROR] [DB] Failed to save lead:', dbErr.message);
     return res.status(500).json({ error: 'Could not save your enquiry right now. Please try again.' });
   }
+
+  enqueueBackgroundJob(() => syncLeadToSheetById(createdLead.id));
 
   res.json({
     success: true,
@@ -1150,10 +1220,16 @@ app.patch('/api/admin/leads/:id/status', requireAdmin, async (req, res) => {
     return res.status(400).json({ error: 'Invalid status value' });
   }
   try {
-    await prisma.lead.update({
+    const lead = await prisma.lead.update({
       where: { id: parseInt(id, 10) },
-      data: { status }
+      data: {
+        status,
+        sheetSyncedAt: null,
+        sheetSyncAttempts: 0,
+        sheetSyncError: null,
+      }
     });
+    enqueueBackgroundJob(() => syncLeadToSheetById(lead.id));
     res.json({ success: true });
   } catch (err) {
     console.error('[ERROR] [Admin] status update error:', err.message);
@@ -1358,5 +1434,13 @@ app.listen(PORT, () => {
     console.log(`[START] Reminder emails enabled. Checking every ${REMINDER_EMAIL_CHECK_INTERVAL_MINUTES} minutes.`);
     setTimeout(processReminderEmails, 30 * 1000);
     setInterval(processReminderEmails, intervalMs);
+  }
+  if (isGoogleSheetsSyncConfigured()) {
+    const intervalMs = GOOGLE_SHEETS_SYNC_INTERVAL_MINUTES * 60 * 1000;
+    console.log(`[START] Google Sheets lead sync enabled. Checking every ${GOOGLE_SHEETS_SYNC_INTERVAL_MINUTES} minutes.`);
+    setTimeout(processPendingSheetSync, 5 * 1000);
+    setInterval(processPendingSheetSync, intervalMs);
+  } else {
+    console.warn('[START] Google Sheets lead sync disabled: service account credentials are not configured.');
   }
 });

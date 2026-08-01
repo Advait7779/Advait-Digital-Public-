@@ -23,6 +23,9 @@ model Lead {
   reminderAttempts  Int       @default(0) @map("reminder_attempts")
   reminderLastError String?   @map("reminder_last_error")
   reminderLockedAt  DateTime? @map("reminder_locked_at")
+  sheetSyncedAt     DateTime? @map("sheet_synced_at")
+  sheetSyncAttempts Int       @default(0) @map("sheet_sync_attempts")
+  sheetSyncError    String?   @map("sheet_sync_error")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at")
 
@@ -31,6 +34,7 @@ model Lead {
   @@index([phone], map: "idx_leads_phone")
   @@index([reminderDueAt], map: "idx_leads_reminder_due_at")
   @@index([reminderSentAt], map: "idx_leads_reminder_sent_at")
+  @@index([sheetSyncedAt], map: "idx_leads_sheet_synced_at")
   @@map("leads")
 }
 
