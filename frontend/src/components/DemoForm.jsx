@@ -35,7 +35,6 @@ export default function DemoForm({ defaultService = '' }) {
     { value: 'whatsapp_marketing', label: 'WhatsApp Marketing Services' },
     { value: 'digital_marketing', label: 'Digital Marketing Services' },
     { value: 'sms_marketing', label: 'SMS Marketing Services' },
-    { value: 'whatsapp_api', label: 'WhatsApp Business API' },
     { value: 'voice_call', label: 'Voice Call Services' }
   ];
 

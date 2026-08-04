@@ -88,13 +88,6 @@ export default function Navbar() {
       desc: 'Dispatch promotional alerts, reminders, OTPs, and notifications.'
     },
     { 
-      name: 'WhatsApp Business API', 
-      path: '/services/whatsapp-api', 
-      icon: AppWindow, 
-      color: 'text-emerald-600 bg-emerald-50',
-      desc: 'Set up automated chatbots and shared multi-agent team inboxes.'
-    },
-    { 
       name: 'Voice Call Services', 
       path: '/services/voice-call', 
       icon: PhoneCall, 
@@ -188,6 +181,10 @@ export default function Navbar() {
                 )}
               </AnimatePresence>
             </div>
+
+            <Link to="/pricing" className={`hover:text-brand-orange transition duration-200 ${location.pathname === '/pricing' ? 'text-brand-orange' : 'text-brand-charcoal'}`}>
+              Pricing
+            </Link>
 
             <Link to="/contact" className={`hover:text-brand-orange transition duration-200 ${location.pathname === '/contact' ? 'text-brand-orange' : 'text-brand-charcoal'}`}>
               Contact
@@ -347,6 +344,16 @@ export default function Navbar() {
                     className="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50/70 border border-gray-100 font-bold text-sm text-brand-charcoal hover:bg-gray-100 transition-colors w-full"
                   >
                     <span>About Us</span>
+                    <CaretDown size={16} className="text-gray-400 transform -rotate-90" />
+                  </Link>
+
+                  {/* Pricing */}
+                  <Link
+                    to="/pricing"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50/70 border border-gray-100 font-bold text-sm text-brand-charcoal hover:bg-gray-100 transition-colors w-full"
+                  >
+                    <span>Pricing</span>
                     <CaretDown size={16} className="text-gray-400 transform -rotate-90" />
                   </Link>
 

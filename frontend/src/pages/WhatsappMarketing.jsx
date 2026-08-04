@@ -13,7 +13,7 @@ import imgBusiness from '../assets/wa_marketing_business.png';
 import imgLogo from '../assets/wa_marketing_logo.png';
 
 export default function WhatsappMarketing() {
-  const [pricingMode, setPricingMode] = useState('submission'); // 'submission' or 'delivery'
+
 
   const coreBenefits = [
     { 
@@ -84,20 +84,7 @@ export default function WhatsappMarketing() {
     }
   ];
 
-  const pricingData = {
-    submission: [
-      { qty: '10K WhatsApp SMS', rate: '20P', total: '2,000', features: ['Deliver Between 10AM to 06PM', 'Send Text + Images, Video', 'No Refund for All Non-Whatsapp Numbers', 'Complete Campaign Reports', 'Delivery in 3-6 hrs', 'Sent Using Random Numbers', '1 Year Validity', '100% Advance Payment'] },
-      { qty: '50K WhatsApp SMS', rate: '16P', total: '8,000', features: ['Deliver Between 10AM to 06PM', 'Send Text + Images, Video', 'No Refund for Non-Whatsapp Numbers', 'Complete Campaign Reports', 'Delivery in 3-6 hrs', 'Sent Using Random Numbers', '1 Year Validity', '100% Advance Payment'] },
-      { qty: '1Lac WhatsApp SMS', rate: '12P', total: '12,000', features: ['Deliver Between 10AM to 06PM', 'Send Text + Images, Video', 'No Refund for Non-Whatsapp Numbers', 'Complete Campaign Reports', 'Delivery in 3-6 hrs', 'Sent Using Random Numbers', '1 Year Validity', '100% Advance Payment'] },
-      { qty: '5Lac WhatsApp SMS', rate: '10P', total: '50,000', features: ['Deliver Between 10AM to 06PM', 'Send Text + Images, Video', 'No Refund for Non-Whatsapp Numbers', 'Complete Campaign Reports', 'Delivery in 3-6 hrs', 'Sent Using Random Numbers', '1 Year Validity', '100% Advance Payment'] }
-    ],
-    delivery: [
-      { qty: '10K WhatsApp SMS', rate: '25P', total: '2,500', features: ['Deliver Between 10AM to 06PM', 'Send Text + Images, Video', 'Refund for All Non-Whatsapp Numbers', 'Complete Campaign Reports', 'Delivery in 3-6 hrs', 'Sent Using Random Numbers', '1 Year Validity', '100% Advance Payment'] },
-      { qty: '50K WhatsApp SMS', rate: '20P', total: '10,000', features: ['Deliver Between 10AM to 06PM', 'Send Text + Images, Video', 'Refund for All Non-Whatsapp Numbers', 'Complete Campaign Reports', 'Delivery in 3-6 hrs', 'Sent Using Random Numbers', '1 Year Validity', '100% Advance Payment'] },
-      { qty: '1Lac WhatsApp SMS', rate: '16P', total: '16,000', features: ['Deliver Between 10AM to 06PM', 'Send Text + Images, Video', 'Refund for All Non-Whatsapp Numbers', 'Complete Campaign Reports', 'Delivery in 3-6 hrs', 'Sent Using Random Numbers', '1 Year Validity', '100% Advance Payment'] },
-      { qty: '5Lac WhatsApp SMS', rate: '14P', total: '70,000', features: ['Deliver Between 10AM to 06PM', 'Send Text + Images, Video', 'Refund for All Non-Whatsapp Numbers', 'Complete Campaign Reports', 'Delivery in 3-6 hrs', 'Sent Using Random Numbers', '1 Year Validity', '100% Advance Payment'] }
-    ]
-  };
+
 
   return (
     <div className="pt-24 space-y-12 sm:space-y-16 md:space-y-24 pb-12 sm:pb-16 md:pb-20 bg-brand-cream-light font-sans">
@@ -297,80 +284,7 @@ export default function WhatsappMarketing() {
         </div>
       </section>
 
-      {/* Pricing Tables Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center space-y-3 mb-12">
-          <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Pricing Plans</span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-brand-charcoal font-serif">Budget-Friendly Bulk Campaign Plans</h2>
-          <div className="w-16 h-1 bg-emerald-600 mx-auto rounded mb-4"></div>
-          
-          {/* Toggle Switches */}
-          <div className="inline-flex rounded-2xl p-1.5 bg-slate-100 border border-slate-200 shadow-inner mt-4">
-            <button
-              onClick={() => setPricingMode('submission')}
-              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${pricingMode === 'submission' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-600 hover:text-emerald-600'}`}
-            >
-              WhatsApp Bulk SMS (Submission)
-            </button>
-            <button
-              onClick={() => setPricingMode('delivery')}
-              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${pricingMode === 'delivery' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-600 hover:text-emerald-600'}`}
-            >
-              WhatsApp Bulk SMS (Delivery basis)
-            </button>
-          </div>
-        </div>
 
-        {/* Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <AnimatePresence mode="wait">
-            {pricingData[pricingMode].map((pkg, idx) => (
-              <motion.div
-                key={`${pricingMode}-${idx}`}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.18, delay: idx * 0.04 }}
-                className="bg-white rounded-3xl p-6 border border-slate-200/60 flex flex-col justify-between hover:shadow-lg hover:border-emerald-600/20 transition-all duration-300 relative overflow-hidden group"
-              >
-                {/* Visual Accent bar on hover */}
-                <div className="absolute top-0 inset-x-0 h-1 bg-emerald-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
-                
-                <div>
-                  <h3 className="text-base font-bold text-slate-800 mb-1">{pkg.qty}</h3>
-                  <div className="flex items-baseline gap-1 border-b border-slate-100 pb-4 mb-4">
-                    <span className="text-2xl font-bold text-slate-900 flex items-center font-serif">
-                      <CurrencyInr size={20} className="text-emerald-600" />
-                      {pkg.total}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-semibold">/ {pkg.rate} Per SMS</span>
-                  </div>
-                  
-                  <ul className="space-y-2.5 mb-6 text-[10px] text-slate-600 font-semibold">
-                    {pkg.features.map((feat, fIdx) => (
-                      <li key={fIdx} className="flex items-center gap-2">
-                        <CheckCircle size={14} className="text-emerald-600 shrink-0" />
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <Link
-                  to="/contact"
-                  className="w-full text-center bg-[#0b2b1b] hover:bg-[#0b2b1b]/90 text-white py-3 rounded-xl text-xs font-bold transition-all duration-200 block shadow-xs hover:scale-[1.02] cursor-pointer"
-                >
-                  Buy Now
-                </Link>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-        
-        <p className="text-[10px] text-slate-400 text-center font-bold mt-6">
-          * 18% GST Extra. All campaigns require 100% advance payment. Valid for 1 year. Delivered using random numbers.
-        </p>
-      </section>
       {/* Interactive CTA Banner: Engage with your Audience (just above the footer) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="relative rounded-3xl overflow-hidden bg-[#0b2b1b] py-10 sm:py-12 md:py-16 px-8 text-center space-y-6 shadow-xl border border-white/10">

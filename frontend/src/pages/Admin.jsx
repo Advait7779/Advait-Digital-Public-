@@ -908,7 +908,7 @@ const DEFAULT_FIELDS = {
   buttonText: "Visit Our Website",
   buttonUrl: "https://advaitdigital.co.in",
   footerLine1: "Advait Digital",
-  footerLine2: "Office No. 522, 5th Floor, Amanora Chambers, Amanora Town Centre, Pune — 411028",
+  footerLine2: "",
   footerPhone: "+91 82829 82829",
   footerEmail: "sales@advaitteleservices.com"
 };

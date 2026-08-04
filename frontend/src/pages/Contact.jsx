@@ -1,15 +1,9 @@
 import SEOHead from '../components/SEOHead';
-import { Phone, Envelope, MapPin, Clock } from '@phosphor-icons/react';
+import { Phone, Envelope, Clock } from '@phosphor-icons/react';
 import DemoForm from '../components/DemoForm';
 
 export default function Contact() {
   const contactInfo = [
-    {
-      title: 'Our Office Location',
-      details: 'Office No.522, 5th Floor, Amanora Chambers, Amanora Town Centre East Block, Pune 411028',
-      icon: MapPin,
-      color: 'text-orange-600 bg-orange-50'
-    },
     {
       title: 'Sales & Inquiries',
       phones: [
@@ -32,8 +26,8 @@ export default function Contact() {
     <div className="pt-24 space-y-12 sm:space-y-16 md:space-y-20 pb-12 sm:pb-16 md:pb-20">
       <SEOHead
         title="Contact Us"
-        description="Contact Advait Digital for bulk SMS, WhatsApp API, RCS messaging, voice call, and digital marketing services. Office at Amanora Chambers, Pune 411028. Call +91 8282982829."
-        keywords="contact Advait Digital, Advait Digital Pune contact, bulk SMS company contact, digital marketing Pune contact, Amanora Chambers Pune, SMS service Pune phone number, WhatsApp API provider contact"
+        description="Contact Advait Digital for bulk SMS, WhatsApp API, RCS messaging, voice call, and digital marketing services. Call +91 8282982829."
+        keywords="contact Advait Digital, Advait Digital Pune contact, bulk SMS company contact, digital marketing Pune contact, SMS service Pune phone number, WhatsApp API provider contact"
         canonical="/contact"
         schema={{
           "@context": "https://schema.org",
@@ -66,7 +60,7 @@ export default function Contact() {
             Let's Start the Conversation
           </h1>
           <p className="text-[#E5E4DE]/70 text-sm sm:text-base leading-relaxed max-w-xl mx-auto mt-4 font-medium">
-            Have questions about our RCS capabilities, DLT registration, or custom integrations? Reach out to our Pune headquarters or submit a demo request.
+            Have questions about our RCS capabilities, DLT registration, or custom integrations? Reach out to our team or submit a demo request.
           </p>
         </div>
       </section>
@@ -158,22 +152,6 @@ export default function Contact() {
             <DemoForm />
           </div>
 
-        </div>
-      </section>
-
-      {/* Map Embed Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="glass-card rounded-3xl overflow-hidden shadow-md border border-brand-charcoal/5 h-96 relative">
-          <iframe 
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3783.279883584852!2d73.94828131539031!3d18.516248387413904!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2c184067ef5ab%3A0xe54fb7a28e200746!2sAmanora%20Chambers!5e0!3m2!1sen!2sin!4v1655389650000!5m2!1sen!2sin" 
-            width="100%" 
-            height="100%" 
-            style={{ border: 0 }} 
-            allowFullScreen="" 
-            loading="lazy" 
-            referrerPolicy="no-referrer-when-downgrade"
-            title="Advait Office Location at Amanora Chambers, Pune"
-          ></iframe>
         </div>
       </section>
     </div>

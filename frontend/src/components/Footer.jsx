@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, Envelope, MapPin, FacebookLogo, TwitterLogo, LinkedinLogo, ArrowUpRight, Eye } from '@phosphor-icons/react';
+import { Phone, Envelope, FacebookLogo, TwitterLogo, LinkedinLogo, ArrowUpRight, Eye } from '@phosphor-icons/react';
 import { fetchVisitorStats } from '../services/analytics';
 
 export default function Footer() {
@@ -20,7 +20,6 @@ export default function Footer() {
     { name: 'WhatsApp Marketing', path: '/services/whatsapp-marketing' },
     { name: 'Digital Marketing Services', path: '/services/digital-marketing' },
     { name: 'SMS Marketing Services', path: '/services/sms-marketing' },
-    { name: 'WhatsApp Business API', path: '/services/whatsapp-api' },
     { name: 'Voice Call Services', path: '/services/voice-call' }
   ];
 
@@ -107,12 +106,6 @@ export default function Footer() {
               Get In Touch
             </h3>
             <ul className="space-y-4 text-sm text-[#E5E4DE]/80 font-medium">
-              <li className="flex items-start gap-3">
-                <MapPin size={18} className="text-brand-orange mt-0.5 shrink-0" />
-                <span className="leading-relaxed">
-                  Office No.522, 5th Floor, Amanora Chambers, Amanora Town Centre East Block, Pune 411028
-                </span>
-              </li>
               <li className="space-y-2">
                 <a href="tel:+918282982829" className="flex items-start gap-3 hover:text-brand-orange transition duration-200 group">
                   <Phone size={18} className="text-brand-orange shrink-0 mt-0.5 group-hover:text-brand-orange transition-colors" />
@@ -151,6 +144,7 @@ export default function Footer() {
           <div className="flex gap-6">
             <Link to="/terms-and-conditions" className="hover:text-brand-orange transition duration-150">Terms of Service</Link>
             <Link to="/privacy-policy" className="hover:text-brand-orange transition duration-150">Privacy Policy</Link>
+            <Link to="/pricing" className="hover:text-brand-orange transition duration-150">Pricing</Link>
           </div>
         </div>
       </div>

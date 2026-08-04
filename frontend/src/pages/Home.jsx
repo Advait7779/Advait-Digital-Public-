@@ -305,13 +305,6 @@ export default function Home() {
       colorClass: 'bg-red-600'
     },
     {
-      title: 'WhatsApp Business API',
-      description: 'Build automated chatbots, integrate shared team inboxes, send commerce catalog messages, and design programmable 2-way workflows.',
-      path: '/services/whatsapp-api',
-      image: waStoreShoes,
-      colorClass: 'bg-emerald-600'
-    },
-    {
       title: 'Voice Call Services',
       description: 'Broadcast personalized, pre-recorded audio messages. Target wide audiences across India with transaction-based automated voice campaigns.',
       path: '/services/voice-call',

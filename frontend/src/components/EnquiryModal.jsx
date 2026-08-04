@@ -22,7 +22,6 @@ export default function EnquiryModal() {
     { value: 'whatsapp_marketing', label: 'WhatsApp Marketing Services' },
     { value: 'rcs', label: 'Rich Communication Service (RCS)' },
     { value: 'sms_marketing', label: 'SMS Marketing Services' },
-    { value: 'whatsapp_api', label: 'WhatsApp Business API' },
     { value: 'voice_call', label: 'Voice Call Services' },
     { value: 'digital_marketing', label: 'Digital Marketing Services' }
   ];

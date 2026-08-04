@@ -506,7 +506,7 @@ function generateHtmlFromConfig(config) {
     buttonText: config.buttonText || "Visit Our Website",
     buttonUrl: config.buttonUrl || "https://advaitdigital.co.in",
     footerLine1: config.footerLine1 || "Advait Digital",
-    footerLine2: config.footerLine2 || "Office No. 522, 5th Floor, Amanora Chambers, Amanora Town Centre, Pune - 411028",
+    footerLine2: config.footerLine2 || "",
     footerPhone: config.footerPhone || "+91 82829 82829",
     footerEmail: config.footerEmail || "sales@advaitteleservices.com",
     logoBase64: config.logoBase64 || "https://advaitdigital.co.in/favicon.png"
@@ -722,7 +722,6 @@ function buildReminderEmail({ name, phone, service }) {
             <td style="background:#fbfbf7;padding:24px 40px;border-top:1px solid #f2f1e5;">
               <p style="margin:0;font-size:12px;color:#3d3936;line-height:1.8;">
                 <strong style="color:#2c2927;">Advait Digital</strong><br />
-                Office No. 522, 5th Floor, Amanora Chambers, Amanora Town Centre, Pune - 411028<br />
                 Phone: <a href="tel:+918282982829" style="color:#f36308;text-decoration:none;">+91 82829 82829</a> &nbsp;|&nbsp;
                 Email: <a href="mailto:sales@advaitteleservices.com" style="color:#f36308;text-decoration:none;">sales@advaitteleservices.com</a>
               </p>

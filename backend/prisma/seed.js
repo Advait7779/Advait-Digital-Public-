@@ -86,8 +86,6 @@ const THANK_YOU_HTML = `<!DOCTYPE html>
                 <tr>
                   <td style="font-size:12px;color:#3d3936;line-height:1.8;">
                     <strong style="color:#2c2927;">Advait Digital</strong><br />
-                    Office No. 522, 5th Floor, Amanora Chambers,<br />
-                    Amanora Town Centre, Pune - 411028<br />
                     Phone: <a href="tel:+918282982829" style="color:#f36308;text-decoration:none;">+91 82829 82829</a> &nbsp;|&nbsp;
                     Email: <a href="mailto:sales@advaitteleservices.com" style="color:#f36308;text-decoration:none;">sales@advaitteleservices.com</a>
                   </td>

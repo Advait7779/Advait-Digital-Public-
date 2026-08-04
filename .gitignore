@@ -33,3 +33,7 @@ yarn-debug.log*
 # Analytics local data
 backend/analytics.json
 
+# Scratch temporary files
+scratch/
+
+
