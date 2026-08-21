@@ -225,10 +225,10 @@ function verifyAdminToken(token) {
 }
 
 /**
- * Health check endpoint
+ * Health check endpoints
  */
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get(['/', '/health', '/api/health'], (req, res) => {
+  res.json({ status: 'ok', service: 'advait-digital-backend', timestamp: new Date().toISOString() });
 });
 
 /**
