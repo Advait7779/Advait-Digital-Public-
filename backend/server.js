@@ -33,8 +33,7 @@ function prepareDatabase() {
     process.env.PRISMA_MIGRATIONS_READY = 'true';
     console.log('[START] Prisma is ready.');
   } catch (error) {
-    console.error('[ERROR] Prisma startup preparation failed:', error.message);
-    process.exit(1);
+    console.warn('[WARN] Prisma startup preparation encountered an issue:', error.message);
   }
 }
 
