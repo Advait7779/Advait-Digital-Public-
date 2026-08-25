@@ -38,6 +38,19 @@ try {
       migrated = true;
       process.env.PRISMA_MIGRATIONS_READY = 'true';
       console.log('[START] Prisma migrations and auto-baselining completed successfully.');
+
+      // A fresh database has the email_templates table after migrations, but it
+      // does not yet contain the default customer thank-you template. The seed
+      // uses an upsert with an empty update, so this creates missing defaults
+      // without overwriting templates customized in the CMS.
+      try {
+        console.log('[START] Ensuring default database records exist...');
+        execSync('node prisma/seed.js', { cwd: __dirname, stdio: 'inherit', env });
+        console.log('[START] Default database records are ready.');
+      } catch (seedErr) {
+        console.error('[WARN] Default database seed failed:', seedErr.message);
+      }
+
       break;
     } catch (migErr) {
       console.error(`[WARN] Migration attempt ${attempt} failed:`, migErr.message);
