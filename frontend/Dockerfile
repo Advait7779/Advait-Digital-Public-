@@ -2,6 +2,9 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
 
+# Ensure devDependencies are installed during build
+ENV NODE_ENV=development
+
 COPY package*.json ./
 RUN npm install
 
