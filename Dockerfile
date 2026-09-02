@@ -14,11 +14,13 @@ RUN cd frontend && npm install
 COPY . .
 
 # Run the build script (generates dist/ at root)
+ARG VITE_API_URL=https://publicapi.advaitdigital.co.in
+ENV VITE_API_URL=$VITE_API_URL
 RUN node build-all.js
 
 # ── Stage 2: Serve Statically with Caddy ──
 FROM caddy:2-alpine
-COPY --from=builder /app/dist /app/dist
+COPY --from=builder /app/dist /srv
 COPY Caddyfile /etc/caddy/Caddyfile
 EXPOSE 80
 CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
