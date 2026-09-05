@@ -49,6 +49,8 @@ app.set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY));
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://advaitdigital.co.in',
   'https://www.advaitdigital.co.in',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'http://localhost:5174',
@@ -65,11 +67,16 @@ app.use(helmet({
 app.disable('x-powered-by');
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (
+      !origin ||
+      allowedOrigins.includes(origin) ||
+      /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+)(:\d+)?$/.test(origin)
+    ) {
       return callback(null, true);
     }
     return callback(null, false);
   },
+  credentials: true,
 }));
 app.use(express.json({ limit: '32kb' }));
 app.use(express.urlencoded({ extended: true, limit: '32kb' }));
@@ -486,6 +493,126 @@ async function sendWabaLead({ name, phone, email, service, sourceForm, message }
   }
 
   return false;
+}
+
+const DEFAULT_SMS_TEMPLATE = 'आपणास व आपल्या परिवारास आषाढी एकादशीच्या हाठ्दिक शुभेच्छा! ADVAIT GPS TRACKING - लाइव्ह वाहन ट्रॅकिंग आणि इंधन मॉनिटरिंग | बेसिक GPS: रु. 2,800 | वायर्ड फ्युएल सेन्सर: रु. 16,500 | वायरलेस फ्युएल सेन्सर: रु. 17,500 | विश्वसनीय वाहन ट्रॅकिंग आणि अचूक इंधन मॉनिटरिंगसाठी. संपर्क: 9890010158';
+const DEFAULT_SMS_TEMPLATE_ID = '1777178496735271263';
+const DEFAULT_SMS_SENDER = 'ADAVAT';
+const DEFAULT_SMS_ROUTE = '1';
+const DEFAULT_SMS_API_URL = 'https://appapi.advaitdigital.co.in/api/smsapi';
+
+function normalizeSmsPhoneNumber(phone = '') {
+  let digits = String(phone || '').replace(/\D/g, '');
+  if (digits.length === 12 && digits.startsWith('91')) {
+    digits = digits.slice(2);
+  } else if (digits.length === 11 && digits.startsWith('0')) {
+    digits = digits.slice(1);
+  }
+  return digits;
+}
+
+/**
+ * Helper to dispatch customer auto-SMS via WABA SMS API gateway (DLT approved)
+ */
+async function sendCustomerSms({ phone, name = '', service = '', overrideConfig = null }) {
+  const cleanNumber = normalizeSmsPhoneNumber(phone);
+  if (!cleanNumber || cleanNumber.length < 10) {
+    console.warn(`[SMS API] Skipped: invalid phone number "${phone}"`);
+    return { success: false, reason: 'Invalid phone number (must be at least 10 digits)' };
+  }
+
+  let enabled = 'true';
+  let apiKey = process.env.SMS_API_KEY || process.env.WABA_API_KEY || '';
+  let sender = process.env.SMS_SENDER_ID || DEFAULT_SMS_SENDER;
+  let route = process.env.SMS_ROUTE || DEFAULT_SMS_ROUTE;
+  let templateId = process.env.SMS_TEMPLATE_ID || DEFAULT_SMS_TEMPLATE_ID;
+  let smsText = DEFAULT_SMS_TEMPLATE;
+  let apiUrl = process.env.SMS_API_URL || DEFAULT_SMS_API_URL;
+
+  try {
+    const keys = [
+      'sms_enabled',
+      'sms_api_key',
+      'waba_api_key',
+      'sms_sender_id',
+      'sms_route',
+      'sms_template_id',
+      'sms_message',
+      'sms_api_url',
+    ];
+    const settingsRows = await prisma.siteSetting.findMany({
+      where: { key: { in: keys } },
+    });
+    const map = {};
+    for (const r of settingsRows) map[r.key] = r.value;
+
+    if (map.sms_enabled !== undefined) enabled = map.sms_enabled;
+    if (map.sms_api_key) apiKey = map.sms_api_key;
+    else if (!apiKey && map.waba_api_key) apiKey = map.waba_api_key;
+    if (map.sms_sender_id) sender = map.sms_sender_id;
+    if (map.sms_route) route = map.sms_route;
+    if (map.sms_template_id) templateId = map.sms_template_id;
+    if (map.sms_message) smsText = map.sms_message;
+    if (map.sms_api_url) apiUrl = map.sms_api_url;
+  } catch (dbErr) {
+    console.warn('[SMS API] Could not read settings from DB, using fallbacks:', dbErr.message);
+  }
+
+  // Handle explicit overrides (e.g. from Admin "Send Test SMS" request)
+  if (overrideConfig) {
+    if (overrideConfig.apiKey) apiKey = overrideConfig.apiKey;
+    if (overrideConfig.sender) sender = overrideConfig.sender;
+    if (overrideConfig.route) route = overrideConfig.route;
+    if (overrideConfig.templateId) templateId = overrideConfig.templateId;
+    if (overrideConfig.message) smsText = overrideConfig.message;
+    if (overrideConfig.apiUrl) apiUrl = overrideConfig.apiUrl;
+  }
+
+  // Ensure gateway points to active appapi endpoint
+  if (apiUrl.includes('waba.advaitdigital.co.in/api/smsapi')) {
+    apiUrl = apiUrl.replace('waba.advaitdigital.co.in', 'appapi.advaitdigital.co.in');
+  }
+
+  if (!overrideConfig?.bypassEnabledCheck && (enabled === 'false' || enabled === '0')) {
+    console.log('[SMS API] SMS sending is disabled in settings.');
+    return { success: false, reason: 'SMS sending is disabled in settings' };
+  }
+
+  if (!apiKey) {
+    console.warn('[SMS API] No API Key found for SMS sending. Please configure it in Admin Settings.');
+    return { success: false, reason: 'No API Key configured' };
+  }
+
+  const queryParams = new URLSearchParams({
+    key: apiKey.trim(),
+    route: String(route || '1').trim(),
+    sender: String(sender || 'ADAVAT').trim(),
+    number: cleanNumber,
+    sms: smsText,
+    templateid: String(templateId || '').trim(),
+  });
+
+  const fullUrl = `${apiUrl.replace(/\/+$/, '')}?${queryParams.toString()}`;
+
+  try {
+    const resp = await fetch(fullUrl, {
+      method: 'GET',
+      signal: AbortSignal.timeout(10000),
+    });
+
+    const respText = await resp.text();
+
+    if (resp.ok) {
+      console.log(`[OK] [SMS API] SMS sent to ${cleanNumber}. Response: ${respText.slice(0, 200)}`);
+      return { success: true, response: respText };
+    } else {
+      console.error(`[ERROR] [SMS API] Failed to send SMS to ${cleanNumber}. Status: ${resp.status}, Response: ${respText.slice(0, 200)}`);
+      return { success: false, status: resp.status, response: respText };
+    }
+  } catch (err) {
+    console.error(`[ERROR] [SMS API] Network error sending SMS to ${cleanNumber}:`, err.message);
+    return { success: false, error: err.message };
+  }
 }
 
 
@@ -1058,6 +1185,9 @@ app.post('/api/submit-lead', leadLimiter, async (req, res) => {
 
     // 4. Dispatch WABA Lead
     await sendWabaLead({ name, phone, email, service, sourceForm, message });
+
+    // 5. Dispatch SMS confirmation/template to customer
+    await sendCustomerSms({ phone, name, service });
   });
 });
 
@@ -1387,14 +1517,19 @@ app.put('/api/admin/template', requireAdmin, async (req, res) => {
 app.get('/api/admin/settings', requireAdmin, async (req, res) => {
   try {
     const rows = await prisma.siteSetting.findMany();
-    const settings = {};
+    const settings = {
+      waba_api_key: '',
+      waba_enquiry_url: 'https://waba.advaitdigital.co.in',
+      sms_enabled: 'true',
+      sms_api_key: '',
+      sms_sender_id: DEFAULT_SMS_SENDER,
+      sms_route: DEFAULT_SMS_ROUTE,
+      sms_template_id: DEFAULT_SMS_TEMPLATE_ID,
+      sms_message: DEFAULT_SMS_TEMPLATE,
+      sms_api_url: DEFAULT_SMS_API_URL,
+    };
     for (const row of rows) {
-      // Never expose the raw API key — mask all but last 4 chars
-      if (row.key === 'waba_api_key' && row.value) {
-        settings[row.key] = row.value; // send full value so admin can view/edit
-      } else {
-        settings[row.key] = row.value;
-      }
+      settings[row.key] = row.value;
     }
     res.json({ settings });
   } catch (err) {
@@ -1410,7 +1545,17 @@ app.get('/api/admin/settings', requireAdmin, async (req, res) => {
 app.put('/api/admin/settings', requireAdmin, async (req, res) => {
   try {
     const updates = req.body || {};
-    const allowedKeys = ['waba_api_key', 'waba_enquiry_url'];
+    const allowedKeys = [
+      'waba_api_key',
+      'waba_enquiry_url',
+      'sms_enabled',
+      'sms_api_key',
+      'sms_sender_id',
+      'sms_route',
+      'sms_template_id',
+      'sms_message',
+      'sms_api_url',
+    ];
     const ops = [];
 
     for (const [key, value] of Object.entries(updates)) {
@@ -1436,6 +1581,55 @@ app.put('/api/admin/settings', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[ERROR] [Admin] settings update error:', err.message);
     res.status(500).json({ error: 'Could not update settings' });
+  }
+});
+
+/**
+ * POST /api/admin/test-sms
+ * Sends a live test SMS to the provided phone number using current or draft settings
+ */
+app.post('/api/admin/test-sms', requireAdmin, async (req, res) => {
+  try {
+    const { phone, apiKey, sender, route, templateId, message, apiUrl } = req.body;
+    if (!phone) {
+      return res.status(400).json({ error: 'Phone number is required for test SMS' });
+    }
+
+    const result = await sendCustomerSms({
+      phone,
+      name: 'Test Admin',
+      service: 'Test Service',
+      overrideConfig: {
+        apiKey,
+        sender,
+        route,
+        templateId,
+        message,
+        apiUrl,
+        bypassEnabledCheck: true,
+      },
+    });
+
+    if (result.success) {
+      res.json({ success: true, message: 'Test SMS sent successfully!', details: result });
+    } else {
+      let errorMsg = result.reason || result.error || 'Failed to send test SMS';
+      if (result.response) {
+        try {
+          const parsed = JSON.parse(result.response);
+          if (parsed.message) errorMsg = parsed.message;
+        } catch {
+          errorMsg = result.response;
+        }
+      }
+      res.status(400).json({
+        error: errorMsg,
+        details: result,
+      });
+    }
+  } catch (err) {
+    console.error('[ERROR] [Admin] test SMS error:', err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 

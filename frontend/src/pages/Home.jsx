@@ -270,18 +270,11 @@ export default function Home() {
       colorClass: 'bg-indigo-600'
     },
     {
-      title: 'Bulk SMS for Election',
-      description: 'Deploy target-focused promotional and transactional SMS campaigns. Keep voters engaged with announcements, alerts, and instant announcements.',
-      path: '/services/election-sms',
-      image: electionHero,
-      colorClass: 'bg-blue-600'
-    },
-    {
-      title: 'Website Design & Development',
-      description: 'Transform your brand into a visual story. We build fully responsive, standard-compliant, W3C optimized websites with custom CMS integrations.',
-      path: '/services/web-dev',
-      image: webDesign,
-      colorClass: 'bg-teal-600'
+      title: 'SMS Marketing Services',
+      description: 'Direct SMS campaigns that cut through the noise. Dispatch promotional, transactional, reminders, OTPs, and notifications at scale with 100% reach.',
+      path: '/services/sms-marketing',
+      image: smsStory,
+      colorClass: 'bg-red-600'
     },
     {
       title: 'WhatsApp Marketing Services',
@@ -291,18 +284,11 @@ export default function Home() {
       colorClass: 'bg-green-600'
     },
     {
-      title: 'Digital Marketing Services',
-      description: 'Planning and executing SEO, Social Media Campaigns, and Google Ads strategies tailored to drive leads and convert visitors into active customers.',
-      path: '/services/digital-marketing',
-      image: dmGrowth,
-      colorClass: 'bg-amber-600'
-    },
-    {
-      title: 'SMS Marketing Services',
-      description: 'Direct SMS campaigns that cut through the noise. Dispatch promotional, transactional, reminders, OTPs, and notifications at scale with 100% reach.',
-      path: '/services/sms-marketing',
-      image: smsStory,
-      colorClass: 'bg-red-600'
+      title: 'Bulk SMS for Election',
+      description: 'Deploy target-focused promotional and transactional SMS campaigns. Keep voters engaged with announcements, alerts, and instant announcements.',
+      path: '/services/election-sms',
+      image: electionHero,
+      colorClass: 'bg-blue-600'
     },
     {
       title: 'Voice Call Services',
@@ -310,6 +296,20 @@ export default function Home() {
       path: '/services/voice-call',
       image: vcConnect,
       colorClass: 'bg-pink-600'
+    },
+    {
+      title: 'Website Design & Development',
+      description: 'Transform your brand into a visual story. We build fully responsive, standard-compliant, W3C optimized websites with custom CMS integrations.',
+      path: '/services/web-dev',
+      image: webDesign,
+      colorClass: 'bg-teal-600'
+    },
+    {
+      title: 'Digital Marketing Services',
+      description: 'Planning and executing SEO, Social Media Campaigns, and Google Ads strategies tailored to drive leads and convert visitors into active customers.',
+      path: '/services/digital-marketing',
+      image: dmGrowth,
+      colorClass: 'bg-amber-600'
     }
   ];
 
@@ -364,6 +364,15 @@ export default function Home() {
       tag: "Bulk SMS Marketing",
       path: "/services/sms-marketing",
       btnText: "Explore SMS Marketing",
+      showStream: false,
+    },
+    {
+      title: "Engage, Nurture & Grow with Email",
+      description: "Send personalized emails, newsletters, offers and updates that reach the right audience at the right time — with 100% delivery reliability.",
+      image: "/email_marketing_illustration.png",
+      tag: "Email Marketing",
+      path: "/contact",
+      btnText: "Explore Email Marketing",
       showStream: false,
     }
   ];
@@ -508,7 +517,7 @@ export default function Home() {
                   </div>
 
                   {/* ── Hero Image + Message Stream ─────────────────── */}
-                  <div className="lg:col-span-5 flex justify-center select-none">
+                  <div className="lg:col-span-5 flex justify-center lg:justify-end select-none">
                     {banner.showStream ? (
                       /*
                        * Outer wrapper: px-20 gives 80px of horizontal breathing room
@@ -535,14 +544,14 @@ export default function Home() {
                       </div>
                     ) : (
                       /* Normal static image for other slides */
-                      <div className="h-48 sm:h-64 md:h-80 flex items-center">
+                      <div className="h-48 sm:h-64 md:h-80 lg:h-[360px] xl:h-[400px] flex items-center justify-center lg:justify-end w-full">
                         <motion.img
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ duration: 0.5, delay: 0.2 }}
                           src={banner.image}
                           alt={banner.title}
-                          className="max-h-full max-w-full object-contain"
+                          className="max-h-full max-w-full object-contain lg:ml-auto"
                         />
                       </div>
                     )}

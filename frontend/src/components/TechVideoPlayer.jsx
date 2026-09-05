@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Play, SpeakerSimpleHigh, SpeakerSimpleSlash, LockKey, ArrowClockwise } from '@phosphor-icons/react';
 
-export default function TechVideoPlayer({ src, title = "Advait Digital Portal", className = "" }) {
+export default function TechVideoPlayer({ src, title = "Advait Digital Portal", url = "advaitdigital.co.in", className = "" }) {
   const videoRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -79,7 +79,7 @@ export default function TechVideoPlayer({ src, title = "Advait Digital Portal", 
           <div className="flex-1 max-w-md mx-4 h-6 bg-[#282830] rounded-md border border-white/5 flex items-center justify-between px-3 text-[11px] text-gray-400 font-mono tracking-tight shadow-inner">
             <div className="flex items-center space-x-1.5 truncate">
               <LockKey size={12} className="text-emerald-400 shrink-0" weight="fill" />
-              <span className="text-gray-300 font-medium truncate">advaitdigital.in/live-demo</span>
+              <span className="text-gray-300 font-medium truncate">{url}</span>
             </div>
             <ArrowClockwise size={11} className="text-gray-500 hover:text-gray-300 shrink-0 transition-colors" />
           </div>
