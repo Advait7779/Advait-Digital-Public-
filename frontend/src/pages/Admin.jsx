@@ -1261,25 +1261,16 @@ function SettingsView({ token }) {
   const [settings, setSettings] = useState({
     waba_api_key: '',
     waba_enquiry_url: 'https://waba.advaitdigital.co.in',
-    sms_enabled: 'true',
-    sms_api_key: '',
-    sms_sender_id: 'ADAVAT',
-    sms_route: '1',
-    sms_template_id: '1777178496735271263',
-    sms_message: 'आपणास व आपल्या परिवारास आषाढी एकादशीच्या हाठ्दिक शुभेच्छा! ADVAIT GPS TRACKING - लाइव्ह वाहन ट्रॅकिंग आणि इंधन मॉनिटरिंग | बेसिक GPS: रु. 2,800 | वायर्ड फ्युएल सेन्सर: रु. 16,500 | वायरलेस फ्युएल सेन्सर: रु. 17,500 | विश्वसनीय वाहन ट्रॅकिंग आणि अचूक इंधन मॉनिटरिंगसाठी. संपर्क: 9890010158',
-    sms_api_url: 'https://appapi.advaitdigital.co.in/api/smsapi',
+    notification_sms_url: '',
+    notification_rcs_url: '',
+    notification_waba_url: '',
+    notification_voicecall_url: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [showWabaKey, setShowWabaKey] = useState(false);
-  const [showSmsKey, setShowSmsKey] = useState(false);
-
-  // Test SMS states
-  const [testPhone, setTestPhone] = useState('');
-  const [testingSms, setTestingSms] = useState(false);
-  const [testResult, setTestResult] = useState(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/admin/settings`, { headers: authHeaders(token) })
@@ -1319,42 +1310,6 @@ function SettingsView({ token }) {
     }
   };
 
-  const handleTestSms = async (e) => {
-    e.preventDefault();
-    if (!testPhone.trim()) {
-      setTestResult({ success: false, message: 'Please enter a 10-digit mobile number' });
-      return;
-    }
-    setTestingSms(true);
-    setTestResult(null);
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/test-sms`, {
-        method: 'POST',
-        headers: authHeaders(token),
-        body: JSON.stringify({
-          phone: testPhone,
-          apiKey: settings.sms_api_key || settings.waba_api_key,
-          sender: settings.sms_sender_id,
-          route: settings.sms_route,
-          templateId: settings.sms_template_id,
-          message: settings.sms_message,
-          apiUrl: settings.sms_api_url,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || (data.details?.response ? `Gateway error: ${data.details.response}` : 'Test SMS failed'));
-      }
-      setTestResult({
-        success: true,
-        message: data.message || 'SMS sent successfully! Gateway response received.',
-      });
-    } catch (err) {
-      setTestResult({ success: false, message: err.message });
-    } finally {
-      setTestingSms(false);
-    }
-  };
 
   if (loading) return (
     <div className="space-y-4 max-w-3xl">
@@ -1362,14 +1317,12 @@ function SettingsView({ token }) {
     </div>
   );
 
-  const isSmsOn = settings.sms_enabled === 'true';
-
   return (
     <div className="max-w-3xl space-y-8">
       <div>
-        <h2 className="text-xl font-black text-[#2c2927]">Integration &amp; SMS Settings</h2>
+        <h2 className="text-xl font-black text-[#2c2927]">Integration &amp; Notification Settings</h2>
         <p className="text-sm text-gray-500 font-semibold mt-1">
-          Manage your WhatsApp WABA and automated Enquiry SMS credentials. Changes take effect immediately — no redeployment needed.
+          Manage your WhatsApp WABA credentials and enquiry notification URLs. Changes take effect immediately — no redeployment needed.
         </p>
       </div>
 
@@ -1425,161 +1378,88 @@ function SettingsView({ token }) {
           </div>
         </div>
 
-        {/* 2. Customer Auto-SMS Gateway Settings (DLT Approved) */}
+        {/* 2. Enquiry Notification URLs */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-[#f36308]">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-              </div>
-              <div>
-                <p className="font-black text-[#2c2927] text-sm">Customer Auto-SMS on Enquiry</p>
-                <p className="text-xs text-gray-400 font-semibold">
-                  Sends DLT approved SMS template to the customer's phone number when they submit an enquiry
-                </p>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
             </div>
-
-            {/* Toggle Switch */}
-            <button
-              type="button"
-              onClick={() => setSettings(s => ({ ...s, sms_enabled: isSmsOn ? 'false' : 'true' }))}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer focus:outline-none ${
-                isSmsOn ? 'bg-[#f36308]' : 'bg-gray-200'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isSmsOn ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
+            <div>
+              <p className="font-black text-[#2c2927] text-sm">Enquiry Notification URLs</p>
+              <p className="text-xs text-gray-400 font-semibold">
+                Paste your pre-configured API URLs. Each URL is called automatically with <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-gray-600">?phone=</code> when a new enquiry is received.
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            {/* SMS API Key */}
-            <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                SMS API Key (Gateway Auth)
-              </label>
-              <div className="relative">
-                <input
-                  type={showSmsKey ? 'text' : 'password'}
-                  value={settings.sms_api_key}
-                  onChange={e => setSettings(s => ({ ...s, sms_api_key: e.target.value }))}
-                  placeholder="Leave empty to use WABA API Key above, or paste dedicated key"
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#f36308]/30 focus:border-[#f36308] transition pr-12 bg-gray-50"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowSmsKey(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition cursor-pointer p-1"
-                >
-                  {showSmsKey ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  )}
-                </button>
-              </div>
-              <p className="text-[11px] text-gray-400 font-semibold mt-1">
-                Passes as <code className="bg-gray-100 px-1 py-0.5 rounded font-mono text-gray-600">?key=</code> in SMS API request
-              </p>
-            </div>
-
-            {/* Sender ID */}
+            {/* SMS Notification URL */}
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                Sender ID (Header)
+                📱 SMS Notification URL
               </label>
               <input
-                type="text"
-                value={settings.sms_sender_id}
-                onChange={e => setSettings(s => ({ ...s, sms_sender_id: e.target.value.toUpperCase() }))}
-                placeholder="ADAVAT"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold tracking-wider uppercase focus:outline-none focus:ring-2 focus:ring-[#f36308]/30 focus:border-[#f36308] transition bg-gray-50"
-              />
-              <p className="text-[11px] text-gray-400 font-semibold mt-1">
-                Approved 6-char DLT Header (<code className="bg-gray-100 px-1 py-0.5 rounded font-mono text-gray-600">sender=</code>)
-              </p>
-            </div>
-
-            {/* DLT Template ID */}
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                DLT Template ID
-              </label>
-              <input
-                type="text"
-                value={settings.sms_template_id}
-                onChange={e => setSettings(s => ({ ...s, sms_template_id: e.target.value.trim() }))}
-                placeholder="1777178496735271263"
+                type="url"
+                value={settings.notification_sms_url}
+                onChange={e => setSettings(s => ({ ...s, notification_sms_url: e.target.value }))}
+                placeholder="https://api.provider.com/send-sms"
                 className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#f36308]/30 focus:border-[#f36308] transition bg-gray-50"
               />
               <p className="text-[11px] text-gray-400 font-semibold mt-1">
-                DLT registered ID (<code className="bg-gray-100 px-1 py-0.5 rounded font-mono text-gray-600">templateid=</code>)
+                Customer phone appended as <code className="bg-gray-100 px-1 py-0.5 rounded font-mono text-gray-600">?phone=</code>
               </p>
             </div>
 
-            {/* Route */}
+            {/* RCS Notification URL */}
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                Route
+                💬 RCS Notification URL
               </label>
               <input
-                type="text"
-                value={settings.sms_route}
-                onChange={e => setSettings(s => ({ ...s, sms_route: e.target.value.trim() }))}
-                placeholder="1"
+                type="url"
+                value={settings.notification_rcs_url}
+                onChange={e => setSettings(s => ({ ...s, notification_rcs_url: e.target.value }))}
+                placeholder="https://api.provider.com/send-rcs"
                 className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#f36308]/30 focus:border-[#f36308] transition bg-gray-50"
               />
               <p className="text-[11px] text-gray-400 font-semibold mt-1">
-                API gateway route parameter (<code className="bg-gray-100 px-1 py-0.5 rounded font-mono text-gray-600">route=1</code>)
+                Customer phone appended as <code className="bg-gray-100 px-1 py-0.5 rounded font-mono text-gray-600">?phone=</code>
               </p>
             </div>
 
-            {/* Gateway Endpoint URL */}
+            {/* WhatsApp/WABA Notification URL */}
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                SMS API Endpoint URL
+                🟢 WhatsApp / WABA Notification URL
               </label>
               <input
-                type="text"
-                value={settings.sms_api_url}
-                onChange={e => setSettings(s => ({ ...s, sms_api_url: e.target.value.trim() }))}
-                placeholder="https://appapi.advaitdigital.co.in/api/smsapi"
+                type="url"
+                value={settings.notification_waba_url}
+                onChange={e => setSettings(s => ({ ...s, notification_waba_url: e.target.value }))}
+                placeholder="https://api.provider.com/send-whatsapp"
                 className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#f36308]/30 focus:border-[#f36308] transition bg-gray-50"
               />
               <p className="text-[11px] text-gray-400 font-semibold mt-1">
-                Target endpoint for HTTP SMS requests
+                Customer phone appended as <code className="bg-gray-100 px-1 py-0.5 rounded font-mono text-gray-600">?phone=</code>
               </p>
             </div>
 
-            {/* Message Template Textarea */}
-            <div className="md:col-span-2">
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  SMS Message Template (Exact DLT Text)
-                </label>
-                <span className="text-[11px] font-mono text-gray-400">
-                  {settings.sms_message?.length || 0} chars
-                </span>
-              </div>
-              <textarea
-                rows={4}
-                value={settings.sms_message}
-                onChange={e => setSettings(s => ({ ...s, sms_message: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#f36308]/30 focus:border-[#f36308] transition bg-gray-50 leading-relaxed font-sans"
+            {/* Voice Call Notification URL */}
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                📞 Voice Call Notification URL
+              </label>
+              <input
+                type="url"
+                value={settings.notification_voicecall_url}
+                onChange={e => setSettings(s => ({ ...s, notification_voicecall_url: e.target.value }))}
+                placeholder="https://api.provider.com/voice-call"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#f36308]/30 focus:border-[#f36308] transition bg-gray-50"
               />
-              <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 font-medium mt-1.5">
-                ⚠️ <strong>DLT Compliance Notice:</strong> Telecom operators reject SMS if wording or characters differ from the registered DLT template ID. Ensure this text exactly matches your approved template.
+              <p className="text-[11px] text-gray-400 font-semibold mt-1">
+                Customer phone appended as <code className="bg-gray-100 px-1 py-0.5 rounded font-mono text-gray-600">?phone=</code>
               </p>
             </div>
           </div>
@@ -1589,7 +1469,7 @@ function SettingsView({ token }) {
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3">
           <span className="text-amber-500 text-lg mt-0.5">ℹ️</span>
           <div className="text-xs text-amber-700 font-semibold leading-relaxed">
-            When a new enquiry is submitted on the website, the lead is stored in the database, forwarded to WhatsApp WABA, and the DLT-approved SMS is dispatched to the customer's phone number automatically.
+            When a new enquiry is submitted, the lead is stored in the database, forwarded to WhatsApp WABA, and all configured notification URLs (SMS, RCS, WhatsApp, Voice Call) are triggered automatically with the customer's phone number.
           </div>
         </div>
 
@@ -1614,54 +1494,6 @@ function SettingsView({ token }) {
         </button>
       </form>
 
-      {/* 3. Send Test SMS Utility */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-          </div>
-          <div>
-            <p className="font-black text-[#2c2927] text-sm">Send Test SMS</p>
-            <p className="text-xs text-gray-400 font-semibold">
-              Verify your SMS API key and DLT template by dispatching a test message to your personal mobile number.
-            </p>
-          </div>
-        </div>
-
-        <form onSubmit={handleTestSms} className="space-y-3">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="tel"
-              value={testPhone}
-              onChange={e => setTestPhone(e.target.value)}
-              placeholder="Enter 10-digit mobile (e.g. 9890010158)"
-              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition bg-gray-50"
-            />
-            <button
-              type="submit"
-              disabled={testingSms}
-              className="bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-black px-6 py-2.5 rounded-xl transition-all shadow-md disabled:opacity-60 cursor-pointer text-sm whitespace-nowrap"
-            >
-              {testingSms ? 'Sending…' : 'Send Test SMS'}
-            </button>
-          </div>
-
-          {testResult && (
-            <div
-              className={`p-3.5 rounded-xl text-sm font-semibold flex items-center gap-2 ${
-                testResult.success
-                  ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
-                  : 'bg-red-50 border border-red-200 text-red-600'
-              }`}
-            >
-              <span>{testResult.success ? '✅' : '❌'}</span>
-              <span>{testResult.message}</span>
-            </div>
-          )}
-        </form>
-      </div>
     </div>
   );
 }

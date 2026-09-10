@@ -121,10 +121,14 @@ const leadLimiter = rateLimit({
 });
 const adminLoginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 8,
+  limit: numberEnv('ADMIN_LOGIN_RATE_LIMIT_PER_15_MIN', 100),
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many login attempts. Please try again later.' },
+  skip: (req) => {
+    const ip = req.ip || req.socket?.remoteAddress || '';
+    return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1' || process.env.NODE_ENV === 'development';
+  },
 });
 const adminLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -615,6 +619,68 @@ async function sendCustomerSms({ phone, name = '', service = '', overrideConfig 
   }
 }
 
+
+/**
+ * Dispatch notification URLs for all 4 channels (SMS, RCS, WABA, Voice Call).
+ * Reads pre-configured URLs from site_settings and fires HTTP GET with ?phone= parameter.
+ */
+async function dispatchNotificationUrls({ phone }) {
+  const cleanNumber = normalizeSmsPhoneNumber(phone);
+  if (!cleanNumber || cleanNumber.length < 10) {
+    console.warn(`[Notification URLs] Skipped: invalid phone "${phone}"`);
+    return;
+  }
+
+  const urlKeys = [
+    'notification_sms_url',
+    'notification_rcs_url',
+    'notification_waba_url',
+    'notification_voicecall_url',
+  ];
+
+  let urlMap = {};
+  try {
+    const rows = await prisma.siteSetting.findMany({
+      where: { key: { in: urlKeys } },
+    });
+    for (const r of rows) urlMap[r.key] = r.value;
+  } catch (dbErr) {
+    console.error('[Notification URLs] DB read failed:', dbErr.message);
+    return;
+  }
+
+  const channels = [
+    { key: 'notification_sms_url', label: 'SMS' },
+    { key: 'notification_rcs_url', label: 'RCS' },
+    { key: 'notification_waba_url', label: 'WhatsApp' },
+    { key: 'notification_voicecall_url', label: 'Voice Call' },
+  ];
+
+  const tasks = channels
+    .filter(ch => urlMap[ch.key]?.trim())
+    .map(async (ch) => {
+      const baseUrl = urlMap[ch.key].trim().replace(/\/+$/, '');
+      const separator = baseUrl.includes('?') ? '&' : '?';
+      const fullUrl = `${baseUrl}${separator}phone=${encodeURIComponent(cleanNumber)}`;
+
+      try {
+        const resp = await fetch(fullUrl, {
+          method: 'GET',
+          signal: AbortSignal.timeout(10000),
+        });
+        if (resp.ok) {
+          console.log(`[OK] [Notification ${ch.label}] Hit ${fullUrl}`);
+        } else {
+          const errText = await resp.text();
+          console.error(`[ERROR] [Notification ${ch.label}] Status ${resp.status}: ${errText.slice(0, 200)}`);
+        }
+      } catch (err) {
+        console.error(`[ERROR] [Notification ${ch.label}] Network error for ${fullUrl}:`, err.message);
+      }
+    });
+
+  await Promise.allSettled(tasks);
+}
 
 
 /**
@@ -1188,6 +1254,9 @@ app.post('/api/submit-lead', leadLimiter, async (req, res) => {
 
     // 5. Dispatch SMS confirmation/template to customer
     await sendCustomerSms({ phone, name, service });
+
+    // 6. Dispatch notification URLs (SMS, RCS, WhatsApp, Voice Call)
+    await dispatchNotificationUrls({ phone });
   });
 });
 
@@ -1527,6 +1596,10 @@ app.get('/api/admin/settings', requireAdmin, async (req, res) => {
       sms_template_id: DEFAULT_SMS_TEMPLATE_ID,
       sms_message: DEFAULT_SMS_TEMPLATE,
       sms_api_url: DEFAULT_SMS_API_URL,
+      notification_sms_url: '',
+      notification_rcs_url: '',
+      notification_waba_url: '',
+      notification_voicecall_url: '',
     };
     for (const row of rows) {
       settings[row.key] = row.value;
@@ -1555,6 +1628,10 @@ app.put('/api/admin/settings', requireAdmin, async (req, res) => {
       'sms_template_id',
       'sms_message',
       'sms_api_url',
+      'notification_sms_url',
+      'notification_rcs_url',
+      'notification_waba_url',
+      'notification_voicecall_url',
     ];
     const ops = [];
 
