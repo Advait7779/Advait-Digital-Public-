@@ -25,8 +25,12 @@ function setup(rows, secrets = { CRM_READ_SECRET: 'a'.repeat(40), WEBHOOK_SECRET
         getRange(row, col, count, width) {
           sheetReads += 1;
           assert.equal(col, 1);
-          assert.equal(width, headers.length);
-          return { getDisplayValues: () => rows.slice(row - 1, row - 1 + count) };
+          return {
+            getDisplayValues: () => rows.slice(row - 1, row - 1 + count).map(values => values.slice(col - 1, col - 1 + width)),
+            setValues(values) {
+              values.forEach((value, index) => { rows[row - 1 + index] = value; });
+            }
+          };
         }
       })
     }) }
@@ -70,4 +74,17 @@ test('CRM read action pages after 250 leads', () => {
   assert.equal(second.rows.length, 1);
   assert.equal(second.rows[0][0], '293');
   assert.equal(second.hasMore, false);
+});
+
+test('website writes still append using the script property secret', () => {
+  const rows = [headers];
+  const app = setup(rows);
+  const result = app.call({
+    secret: 'write-secret', id: 43, name: 'Customer', phone: '0900000000',
+    service: 'CCTV', sourceForm: 'Contact', createdAt: '2026-10-15T05:00:00.000Z'
+  });
+  assert.equal(result.success, true);
+  assert.equal(result.action, 'appended');
+  assert.equal(rows[1][0], '43');
+  assert.equal(rows[1][2], '0900000000');
 });
