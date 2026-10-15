@@ -33,10 +33,42 @@ function doGet() {
   return jsonResponse_({ success: true, service: 'Advait Digital lead webhook' });
 }
 
+// CRM reads only the Website Cms tab. Keep this secret separate from WEBHOOK_SECRET.
+function readLeadsForCrm_(payload, lock) {
+  const expectedSecret = PropertiesService.getScriptProperties().getProperty('CRM_READ_SECRET');
+  if (!expectedSecret || String(expectedSecret).length < 32 || payload.secret !== expectedSecret) {
+    return jsonResponse_({ success: false, error: 'Unauthorized' });
+  }
+  const afterId = Number(payload.afterId);
+  if (!Number.isSafeInteger(afterId) || afterId < 0) {
+    return jsonResponse_({ success: false, error: 'Invalid afterId' });
+  }
+  lock.waitLock(10000);
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = spreadsheet.getSheetByName(SHEET_NAME);
+  if (!sheet) throw new Error('Target sheet was not found.');
+  const headers = sheet.getRange(1, 1, 1, LEAD_HEADERS.length).getDisplayValues()[0];
+  if (!LEAD_HEADERS.every((header, index) => headers[index] === header)) {
+    throw new Error('Sheet headers do not match the CMS lead columns.');
+  }
+  const lastRow = sheet.getLastRow();
+  const values = lastRow > 1
+    ? sheet.getRange(2, 1, lastRow - 1, LEAD_HEADERS.length).getDisplayValues()
+    : [];
+  const matches = values
+    .filter(row => Number.isSafeInteger(Number(row[0])) && Number(row[0]) > afterId)
+    .sort((a, b) => Number(a[0]) - Number(b[0]));
+  const rows = matches.slice(0, 250);
+  return jsonResponse_({ success: true, headers: LEAD_HEADERS, rows, hasMore: matches.length > rows.length });
+}
+
 function doPost(e) {
   const lock = LockService.getScriptLock();
   try {
     const payload = JSON.parse((e.postData && e.postData.contents) || '{}');
+    if (payload.action === 'readLeads') {
+      return readLeadsForCrm_(payload, lock);
+    }
     const expectedSecret = PropertiesService.getScriptProperties().getProperty('WEBHOOK_SECRET');
     if (!expectedSecret || payload.secret !== expectedSecret) {
       return jsonResponse_({ success: false, error: 'Unauthorized' });
