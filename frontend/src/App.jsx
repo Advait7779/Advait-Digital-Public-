@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import EnquiryModal from './components/EnquiryModal';
 import CookieConsent from './components/CookieConsent';
+import MobileContactStrip from './components/MobileContactStrip';
 import { trackVisit } from './services/analytics';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -117,12 +118,12 @@ export default function App() {
             {/* Footer */}
             <Footer />
 
-            {/* Floating WhatsApp Button */}
+            {/* Floating WhatsApp Button (Desktop only) */}
             <a 
               href="https://wa.me/919921968968" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="fixed bottom-6 right-6 z-50 bg-[#25D366] text-white p-3 rounded-full shadow-lg hover:shadow-emerald-500/25 hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center cursor-pointer group"
+              className="hidden md:flex fixed bottom-6 right-6 z-40 bg-[#25D366] text-white p-3 rounded-full shadow-lg hover:shadow-emerald-500/25 hover:shadow-xl transition-all duration-300 hover:scale-110 items-center justify-center cursor-pointer group"
               aria-label="Contact us on WhatsApp"
             >
               <svg viewBox="0 0 256 256" className="w-8 h-8" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -135,6 +136,9 @@ export default function App() {
                 Chat with us
               </span>
             </a>
+
+            {/* Mobile Sticky Contact Strip (Call on Left, WhatsApp on Right) */}
+            <MobileContactStrip />
 
             {/* Cookie Consent Banner */}
             <CookieConsent />

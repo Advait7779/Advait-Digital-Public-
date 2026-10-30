@@ -1,4 +1,5 @@
 import { Fragment, useState, useEffect, useCallback, useRef } from 'react';
+import { Eye, EyeSlash, EnvelopeSimple, LockKey, ShieldCheck } from '@phosphor-icons/react';
 import { getApiBaseUrl } from '../services/api.js';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -400,10 +401,11 @@ function StatusBadge({ status }) {
 
 // ─── Login Screen ─────────────────────────────────────────────────────────────
 function LoginScreen({ onLogin }) {
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError]       = useState('');
-  const [loading, setLoading]   = useState(false);
+  const [email, setEmail]               = useState('');
+  const [password, setPassword]         = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError]               = useState('');
+  const [loading, setLoading]           = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -422,54 +424,108 @@ function LoginScreen({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#2c2927] via-[#1e1c1a] to-[#111] flex items-center justify-center p-4">
-      {/* Glow orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#f36308]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-[#f36308]/5 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-gradient-to-b from-[#fbfbf7] via-[#f5f4ed] to-[#fbfbf7] flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Soft ambient brand aura */}
+      <div className="absolute top-1/4 -left-20 w-96 h-96 bg-[#f36308]/6 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-[#f36308]/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative w-full max-w-[92vw] sm:max-w-[340px]">
-        <div className="text-center mb-8">
-          <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl mx-auto mb-4 shadow-2xl border-2 border-[#f36308]/30 overflow-hidden">
-            <img src="/favicon.png" alt="Advait Digital" className="w-full h-full object-cover" />
+      <div className="relative w-full max-w-[90vw] sm:max-w-[340px] z-10">
+        {/* Brand Header */}
+        <div className="text-center mb-6">
+          <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl mx-auto mb-3.5 shadow-xl border-2 border-[#f36308]/20 overflow-hidden bg-white p-1">
+            <img src="/favicon.png" alt="Advait Digital" className="w-full h-full object-cover rounded-xl" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             Advait <span className="text-[#f36308]">Digital</span>
           </h1>
-          <p className="text-white/40 text-xs sm:text-sm mt-1 font-semibold tracking-wider uppercase">CMS Admin Panel</p>
+          <p className="text-slate-500 text-xs sm:text-sm mt-1 font-bold tracking-wider uppercase">CMS Admin Panel</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 sm:px-8 sm:py-10 shadow-2xl">
-          <h2 className="text-white text-lg sm:text-xl font-black mb-6">Sign In</h2>
+        {/* Card Form */}
+        <form onSubmit={handleSubmit} className="bg-white/95 backdrop-blur-xl border border-slate-200/90 rounded-3xl px-6 py-8 sm:px-7 sm:py-10 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.08),0_0_25px_rgba(243,99,8,0.04)]">
+          <div className="w-10 h-1 bg-gradient-to-r from-[#f36308] to-amber-500 rounded-full mb-6" />
+          
+          <div className="mb-7">
+            <h2 className="text-slate-900 text-xl font-black tracking-tight">Sign In</h2>
+            <p className="text-slate-500 text-xs mt-1.5 font-medium">Enter your credentials to access the CMS</p>
+          </div>
+
           <div className="space-y-5">
             <div>
-              <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">Admin Email</label>
-              <input
-                type="email" value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="w-full px-4 py-3.5 rounded-xl bg-white/8 border border-white/15 text-white placeholder-white/25 text-sm focus:outline-none focus:ring-2 focus:ring-[#f36308]/50 focus:border-[#f36308] transition"
-                required
-              />
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-widest mb-1.5">Admin Email</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <EnvelopeSimple size={18} weight="bold" />
+                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="admin@advaitdigital.co.in"
+                  className="w-full pl-10.5 pr-4 py-3.5 rounded-xl bg-slate-50/80 hover:bg-slate-100/80 focus:bg-white border border-slate-200/90 focus:border-[#f36308] focus:ring-2 focus:ring-[#f36308]/20 text-slate-900 placeholder-slate-400 text-sm font-medium transition-all duration-200 outline-none"
+                  required
+                  autoComplete="email"
+                />
+              </div>
             </div>
+
             <div>
-              <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">Admin Password</label>
-              <input
-                type="password" value={password} onChange={e => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="w-full px-4 py-3.5 rounded-xl bg-white/8 border border-white/15 text-white placeholder-white/25 text-sm focus:outline-none focus:ring-2 focus:ring-[#f36308]/50 focus:border-[#f36308] transition"
-                required
-              />
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-widest mb-1.5">Admin Password</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <LockKey size={18} weight="bold" />
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="w-full pl-10.5 pr-11 py-3.5 rounded-xl bg-slate-50/80 hover:bg-slate-100/80 focus:bg-white border border-slate-200/90 focus:border-[#f36308] focus:ring-2 focus:ring-[#f36308]/20 text-slate-900 placeholder-slate-400 text-sm font-medium transition-all duration-200 outline-none"
+                  required
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-700 active:scale-95 transition-colors cursor-pointer"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeSlash size={18} weight="bold" />
+                  ) : (
+                    <Eye size={18} weight="bold" />
+                  )}
+                </button>
+              </div>
             </div>
+
             {error && (
-              <div className="p-3.5 rounded-xl bg-red-500/15 border border-red-500/25 text-red-300 text-xs font-bold flex items-center gap-2">
-                <span>⚠️</span> {error}
+              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center gap-2.5">
+                <span className="text-sm shrink-0">⚠️</span>
+                <span>{error}</span>
               </div>
             )}
+
             <button
-              type="submit" disabled={loading}
-              className="w-full bg-[#f36308] hover:bg-[#d95507] active:scale-[0.98] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-[#f36308]/30 disabled:opacity-60 cursor-pointer text-sm tracking-wide mt-2"
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-[#f36308] via-[#f36308] to-[#ea580c] hover:from-[#ea580c] hover:to-[#c2410c] active:scale-[0.98] text-white font-black py-4 rounded-xl transition-all duration-200 shadow-md shadow-[#f36308]/25 hover:shadow-lg hover:shadow-[#f36308]/35 disabled:opacity-60 cursor-pointer text-sm tracking-wide mt-2 flex items-center justify-center gap-2"
             >
-              {loading ? 'Signing in…' : 'Sign In →'}
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
+                  <span>Signing in…</span>
+                </>
+              ) : (
+                <span>Sign In →</span>
+              )}
             </button>
+
+            <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 font-medium pt-2">
+              <ShieldCheck size={14} className="text-[#f36308]" weight="fill" />
+              <span>End-to-end encrypted admin session</span>
+            </div>
           </div>
         </form>
       </div>

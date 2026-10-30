@@ -82,3 +82,18 @@
 .rounded-xl {
   border-radius: 8px !important;
 }
+
+/* Hide Microsoft Edge / IE native password reveal icons to prevent double-eye icons */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+}
+
+/* Smooth autofill styling to prevent harsh blue autofill highlights */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #f8fafc inset !important;
+  -webkit-text-fill-color: #0f172a !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
